@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
 
 typedef int Handle;
 
@@ -9,9 +10,14 @@ private:
     static std::vector<void*> vec;
 
 public:
-    static Handle CreateHandle(void* pointer) {
-        vec.push_back(pointer);
+    static Handle CreateHandle(void* ptr) {
+        vec.push_back(ptr);
         return vec.size() - 1;
+    }
+
+    template<typename T>
+    static Handle CreateHandle(const std::unique_ptr<T>& uptr) {
+        return CreateHandle(uptr.get());
     }
 
     static void* GetPointerUnsafe(Handle handle) {
@@ -27,6 +33,7 @@ private:
 
 public:
     UserService(const std::string& host) : host_(host) {}
+    ~UserService() { std::cout << "~UserService" << std::endl; }
 
     const std::string& GetHost() const { return host_; }
 };
@@ -45,7 +52,8 @@ public:
 };
 
 int main() {
-    HUserService usrv(HandleStore::CreateHandle(new UserService("userservice.api.com")));
+    auto owned_usrv = std::make_unique<UserService>("userservice.api.com");
+    HUserService usrv(HandleStore::CreateHandle(owned_usrv));
     std::cout << "hello " << usrv.GetHost() << std::endl;
     return 0;
 }
