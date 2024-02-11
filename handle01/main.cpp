@@ -27,6 +27,23 @@ public:
 
 std::vector<void*> HandleStore::vec{};
 
+template<typename T>
+class UnownedPtr {
+private:
+    Handle handle_;
+
+public:
+    UnownedPtr(Handle handle) : handle_(handle) {}
+};
+
+template<typename T>
+class OwnedPtr {
+public:
+    UnownedPtr<T> GetUnowned() {
+        return nullptr;
+    }
+};
+
 class UserService {
 private:
     std::string host_;
@@ -34,6 +51,10 @@ private:
 public:
     UserService(const std::string& host) : host_(host) {}
     ~UserService() { std::cout << "~UserService" << std::endl; }
+
+    static OwnedPtr<UserService> New() {
+        return {};
+    }
 
     const std::string& GetHost() const { return host_; }
 };
