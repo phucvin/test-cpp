@@ -15,7 +15,9 @@ public:
     }
 
     static void* GetPointerUnsafe(Handle handle) {
-        return vec[(int)handle];
+        void* ptr = vec[(int)handle];
+        if (ptr == nullptr) ptr = (void*)0xFEFEFEFE;
+        return ptr;
     }
 
     static void InvalidateHandle(Handle handle) {
@@ -88,6 +90,7 @@ public:
 
 int main() {
     auto owned_usrv = UserService::New("userservice.api.com");
+    owned_usrv.Reset();
     UnownedPtr<UserService> usrv = owned_usrv.GetUnowned();
     std::cout << "hello " << usrv->GetHost() << std::endl;
     return 0;
