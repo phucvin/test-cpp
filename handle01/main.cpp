@@ -38,9 +38,15 @@ public:
 
 template<typename T>
 class OwnedPtr {
+private:
+    T* ptr_;
+    Handle handle_;
+
 public:
+    OwnedPtr(T* ptr, Handle handle) : ptr_(ptr), handle_(handle) {}
+
     UnownedPtr<T> GetUnowned() {
-        return nullptr;
+        return UnownedPtr<T>(handle_);
     }
 };
 
@@ -52,8 +58,10 @@ public:
     UserService(const std::string& host) : host_(host) {}
     ~UserService() { std::cout << "~UserService" << std::endl; }
 
-    static OwnedPtr<UserService> New() {
-        return {};
+    static OwnedPtr<UserService> New(const std::string& host) {
+        auto* ptr = new UserService(host);
+        Handle handle = HandleStore::CreateHandle(ptr);
+        return OwnedPtr<UserService>(ptr, handle);
     }
 
     const std::string& GetHost() const { return host_; }
