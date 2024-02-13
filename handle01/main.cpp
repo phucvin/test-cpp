@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 
+#include "slot_map.h"
+
 typedef int Handle;
 
 class HandleStore {
