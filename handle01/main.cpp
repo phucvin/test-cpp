@@ -64,6 +64,10 @@ public:
         Reset();
     }
 
+    Handle GetHandle() const {
+        return handle_;
+    }
+
     UnownedPtr<T> GetUnowned() {
         return UnownedPtr<T>(handle_);
     }
@@ -122,8 +126,12 @@ public:
 
 int main() {
     auto tmp = UserService::New("userservice.api.com");
+    std::cout << "user service handle " << tmp.GetHandle() << std::endl;
     auto owned_usrv = std::move(tmp);
     auto upage = UserPage::New(owned_usrv.GetUnowned());
+    owned_usrv.Reset();
+    auto tmp2 = UserService::New("userservice.api.com");
+    std::cout << "new user service handle " << tmp2.GetHandle() << std::endl;
     upage->Render();
     return 0;
 }
