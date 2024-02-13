@@ -37,7 +37,7 @@ private:
 public:
     UnownedPtr(Handle handle) : handle_(handle) {}
 
-    T* operator ->() {
+    T* operator ->() const {
         return (T*)HandleStore::GetPointerUnsafe(handle_);
     }
 };
@@ -68,7 +68,7 @@ public:
         return UnownedPtr<T>(handle_);
     }
 
-    T* operator ->() {
+    T* operator ->() const {
         return ptr_;
     }
 
@@ -100,12 +100,30 @@ public:
     const std::string& GetHost() const { return host_; }
 };
 
+class UserPage {
+private:
+    UnownedPtr<UserService> usrv_;
+
+    UserPage(UnownedPtr<UserService> usrv) : usrv_(usrv) {}
+
+public:
+    ~UserPage() { std::cout << "~UserPage" << std::endl; }
+
+    static OwnedPtr<UserPage> New(UnownedPtr<UserService> usrv) {
+        auto* ptr = new UserPage(usrv);
+        Handle handle = HandleStore::CreateHandle(ptr);
+        return OwnedPtr<UserPage>(ptr, handle);
+    }
+
+    const void Render() const {
+        std::cout << "calling " << usrv_->GetHost() << std::endl;
+    }
+};
+
 int main() {
     auto tmp = UserService::New("userservice.api.com");
     auto owned_usrv = std::move(tmp);
-    UnownedPtr<UserService> usrv = owned_usrv.GetUnowned();
-    std::cout << "hello " << usrv->GetHost() << std::endl;
-    std::cout << "bye " << owned_usrv->GetHost() << std::endl;
-    owned_usrv.Reset();
+    auto upage = UserPage::New(owned_usrv.GetUnowned());
+    upage->Render();
     return 0;
 }
