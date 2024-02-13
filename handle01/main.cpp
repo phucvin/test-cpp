@@ -1,33 +1,33 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cassert>
 
 #include "slot_map.h"
 
-typedef int Handle;
+typedef dod::slot_map_key64<void*> Handle;
 
 class HandleStore {
 private:
-    static std::vector<void*> vec;
+    static dod::slot_map64<void*> slot_map;
 
 public:
     static Handle CreateHandle(void* ptr) {
-        vec.push_back(ptr);
-        return vec.size() - 1;
+        return slot_map.emplace(ptr);
     }
 
     static void* GetPointerUnsafe(Handle handle) {
-        void* ptr = vec[(int)handle];
-        if (ptr == nullptr) ptr = (void*)0xFEFEFEFE;
-        return ptr;
+        void** pptr = slot_map.get(handle);
+        assert(pptr != nullptr);
+        return *pptr;
     }
 
     static void InvalidateHandle(Handle handle) {
-        vec[(int)handle] = nullptr;
+        slot_map.erase(handle);
     }
 };
 
-std::vector<void*> HandleStore::vec{};
+dod::slot_map64<void*> HandleStore::slot_map{};
 
 template<typename T>
 class UnownedPtr {
@@ -56,7 +56,7 @@ public:
         this->ptr_ = rhs.ptr_;
         this->handle_ = rhs.handle_;
         rhs.ptr_ = nullptr;
-        rhs.handle_ = 0;
+        rhs.handle_ = {};
     }
     OwnedPtr(const OwnedPtr&) = delete;
 
@@ -78,7 +78,7 @@ public:
         HandleStore::InvalidateHandle(handle_);
         delete ptr_;
         ptr_ = nullptr;
-        handle_ = 0;
+        handle_ = {};
     }
 };
 
