@@ -48,6 +48,16 @@ private:
 
 public:
     OwnedPtr(T* ptr, Handle handle) : ptr_(ptr), handle_(handle) {}
+
+    // This type is moveable but not copyable
+    OwnedPtr(OwnedPtr&& rhs) {
+        this->ptr_ = rhs.ptr_;
+        this->handle_ = rhs.handle_;
+        rhs.ptr_ = nullptr;
+        rhs.handle_ = 0;
+    }
+    OwnedPtr(const OwnedPtr&) = delete;
+
     ~OwnedPtr() {
         Reset();
     }
@@ -89,9 +99,11 @@ public:
 };
 
 int main() {
-    auto owned_usrv = UserService::New("userservice.api.com");
-    owned_usrv.Reset();
+    auto tmp = UserService::New("userservice.api.com");
+    auto owned_usrv = std::move(tmp);
     UnownedPtr<UserService> usrv = owned_usrv.GetUnowned();
     std::cout << "hello " << usrv->GetHost() << std::endl;
+    std::cout << "bye " << owned_usrv->GetHost() << std::endl;
+    owned_usrv.Reset();
     return 0;
 }
