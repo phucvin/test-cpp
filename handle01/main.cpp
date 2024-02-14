@@ -90,6 +90,7 @@ public:
     UnownedPtr(Handle handle) : handle_(handle) {}
 
     SnapshotPtr<T> GetSnapshot() const {
+        // TODO: Optmize this to reduce unnecessary fetch_add and fetch_sub
         auto tmp = SnapshotPtr<T>(HandleStore::GetPointerUnsafe(handle_));
         if (*tmp && HandleStore::GetPointerUnsafe(handle_)) {
             return SnapshotPtr<T>(HandleStore::GetPointerUnsafe(handle_));
