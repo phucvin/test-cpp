@@ -10,7 +10,7 @@ TODO:
 
 References:
 - https://floooh.github.io/2018/06/17/handles-vs-pointers.html
-- https://github.com/SergeyMakeev/slot_map https://docs.rs/slotmap/latest/slotmap/
+- https://github.com/SergeyMakeev/slot_map https://docs.rs/slotmap/latest/slotmap/ https://github.com/SilvanVR/SlotMap
 - https://github.com/ppetr/lockfree-userspace-rcu
 - https://github.com/urcu/userspace-rcu
 - https://aturon.github.io/blog/2015/08/27/epoch/
