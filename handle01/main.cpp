@@ -189,28 +189,35 @@ public:
 };
 
 void main01() {
-    Owned<UserService> usrv = UserService::New("userservice.api.com");
-    Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
-    std::barrier barrier(2);
+    HazPtrInit();
+    Owned<UserService>* usrv_p;
+    Owned<UserPage>* upage_p;
+    constexpr int n = 1000;
+    std::barrier barrier(3);
     std::jthread t1([&] {
-        barrier.arrive_and_wait();
-        upage->Render();
+        for (int i = 0; i < n; ++i) {
+            Owned<UserService> usrv = UserService::New("userservice.api.com");
+            Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
+            usrv_p
+            barrier.arrive_and_wait();
+        }
     });
     std::jthread t2([&] {
-        barrier.arrive_and_wait();
-        usrv.Reset();
+        for (int i = 0; i < n; ++i) {
+            barrier.arrive_and_wait();
+            upage->Render();
+        }
+    });
+    std::jthread t3([&] {
+        for (int i = 0; i < n; ++i) {
+            barrier.arrive_and_wait();
+            usrv.Reset();
+        }
     });
 }
 
 int main() {
-    HazPtrInit();
-    {
-        AutoTimer timer;
-        for (int i = 0; i < 100000; ++i) {
-            // std::cout << std::endl;
-            main01();
-            // std::cout << std::endl;
-        }
-    }
+    AutoTimer timer;
+    main01();
     return 0;
 }
