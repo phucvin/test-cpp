@@ -1,5 +1,8 @@
 ```
-clang++ -pthread -std=c++17 -o main main.cpp && ./main
+$ sh <(curl -L https://nixos.org/nix/install) --no-daemon
+$ . /home/codespace/.nix-profile/etc/profile.d/nix.sh
+$ nix-shell -p clang
+$ clang++ -pthread -std=c++20 -o main main.cpp && ./main
 ```
 
 TODO:

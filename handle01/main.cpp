@@ -1,3 +1,4 @@
+#include <barrier>
 #include <iostream>
 #include <string>
 #include <thread>
@@ -137,10 +138,13 @@ public:
 void main01() {
     OwnedPtr<UserService> usrv = UserService::New("userservice.api.com");
     OwnedPtr<UserPage> upage = UserPage::New(usrv.GetUnowned());
+    std::barrier barrier(2);
     std::thread t1([&] {
+        barrier.arrive_and_wait();
         upage->Render();
     });
     std::thread t2([&] {
+        barrier.arrive_and_wait();
         usrv.Reset();
     });
     t1.join();
