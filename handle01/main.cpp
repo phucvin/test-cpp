@@ -7,6 +7,10 @@
 #include <cassert>
 
 #include "slot_map.h"
+#include "haz_ptr.h"
+#include "auto_timer.h"
+
+ENABLE_LOCAL_DOMAIN
 
 struct ArcRawPtr {
     void* ptr;
@@ -212,10 +216,14 @@ void main01() {
 }
 
 int main() {
-    for (int i = 0; i < 100000; ++i) {
-        // std::cout << std::endl;
-        main01();
-        // std::cout << std::endl;
+    HazPtrInit();
+    {
+        AutoTimer timer;
+        for (int i = 0; i < 100000; ++i) {
+            // std::cout << std::endl;
+            main01();
+            // std::cout << std::endl;
+        }
     }
     return 0;
 }
