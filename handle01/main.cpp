@@ -43,10 +43,14 @@ private:
     ArcRawPtr* ptr_;
 
 public:
-    SnapshotPtr(ArcRawPtr* ptr) : ptr_(ptr) {
-        if (ptr_ == nullptr) return;
-
-        ptr_->c.fetch_add(1);
+    SnapshotPtr(Handle handle) : ptr_(nullptr) {
+        ArcRawPtr* raw1 = HandleStore::GetPointerUnsafe(handle);
+        if (raw1) raw1->c.fetch_add(1);
+        // Double check after increasing atomic counter
+        ArcRawPtr* raw2 = HandleStore::GetPointerUnsafe(handle);
+        if (raw2) {
+            ptr_ = raw2;
+        }
     }
 
     // This type is neither moveable nor copyable
@@ -90,13 +94,7 @@ public:
     UnownedPtr(Handle handle) : handle_(handle) {}
 
     SnapshotPtr<T> GetSnapshot() const {
-        // TODO: Optmize this to reduce unnecessary fetch_add and fetch_sub
-        auto tmp = SnapshotPtr<T>(HandleStore::GetPointerUnsafe(handle_));
-        if (*tmp && HandleStore::GetPointerUnsafe(handle_)) {
-            return SnapshotPtr<T>(HandleStore::GetPointerUnsafe(handle_));
-        } else {
-            return {nullptr};
-        }
+        return SnapshotPtr<T>(handle_);
     }
 };
 
@@ -111,7 +109,7 @@ public:
     OwnedPtr(T* ptr, Handle handle) :
             ptr_(ptr),
             handle_(handle),
-            first_snapshot_(HandleStore::GetPointerUnsafe(handle_))
+            first_snapshot_(handle_)
     {}
 
     // This type is moveable but not copyable
@@ -214,7 +212,7 @@ void main01() {
 }
 
 int main() {
-    for (int i = 0; i < 10000; ++i) {
+    for (int i = 0; i < 100000; ++i) {
         // std::cout << std::endl;
         main01();
         // std::cout << std::endl;
