@@ -101,7 +101,7 @@ private:
 public:
     ~UserService() {
         host_ = "INVALID";
-        std::cout << "~UserService" << std::endl;
+        // std::cout << "~UserService" << std::endl;
     }
 
     static OwnedPtr<UserService> New(const std::string& host) {
@@ -120,7 +120,9 @@ private:
     UserPage(UnownedPtr<UserService> usrv) : usrv_(usrv) {}
 
 public:
-    ~UserPage() { std::cout << "~UserPage" << std::endl; }
+    ~UserPage() {
+        // std::cout << "~UserPage" << std::endl;
+    }
 
     static OwnedPtr<UserPage> New(UnownedPtr<UserService> usrv) {
         auto* ptr = new UserPage(usrv);
@@ -133,9 +135,9 @@ public:
         if (usrv) {
             auto host = usrv->GetHost();
             assert(host != "INVALID");
-            std::cout << "calling " << host << std::endl;
+            // std::cout << "calling " << host << std::endl;
         } else {
-            std::cout << "skip rendering since UserService is null" << std::endl;
+            // std::cout << "skip rendering since UserService is null" << std::endl;
         }
     }
 };
@@ -155,10 +157,10 @@ void main01() {
 }
 
 int main() {
-    for (int i = 0; i < 10; ++i) {
-        std::cout << std::endl;
+    for (int i = 0; i < 100000; ++i) {
+        // std::cout << std::endl;
         main01();
-        std::cout << std::endl;
+        // std::cout << std::endl;
     }
     return 0;
 }
