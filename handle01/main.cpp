@@ -86,6 +86,7 @@ public:
         if (ptr_ == nullptr) return;
 
         HandleStore::InvalidateHandle(handle_);
+        // TODO: Use thread-safe memory reclamation
         delete ptr_;
         ptr_ = nullptr;
         handle_ = {};
