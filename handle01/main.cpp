@@ -21,7 +21,7 @@ private:
 
 public:
     static Handle CreateHandle(void* ptr) {
-        return slot_map.emplace(ptr, 1);
+        return slot_map.emplace(ptr, 0);
     }
 
     static ArcRawPtr* GetPointerUnsafe(Handle handle) {
@@ -43,7 +43,11 @@ private:
     ArcRawPtr* ptr_;
 
 public:
-    SnapshotPtr(ArcRawPtr* ptr) : ptr_(ptr) {}
+    SnapshotPtr(ArcRawPtr* ptr) : ptr_(ptr) {
+        if (ptr_ == nullptr) return;
+
+        ptr_->c.fetch_add(1);
+    }
 
     // This type is neither moveable nor copyable
     SnapshotPtr(SnapshotPtr&& rhs) = delete;
@@ -53,16 +57,18 @@ public:
         Reset();
     }
 
-    T* operator *() const {
+    T* Get() const {
         if (ptr_ == nullptr) return nullptr;
 
         return (T*)ptr_->ptr;
     }
 
-    T* operator ->() const {
-        if (ptr_ == nullptr) return nullptr;
+    T* operator *() const {
+        return Get();
+    }
 
-        return (T*)ptr_->ptr;
+    T* operator ->() const {
+        return Get();
     }
 
     void Reset() {
@@ -84,16 +90,10 @@ public:
     UnownedPtr(Handle handle) : handle_(handle) {}
 
     SnapshotPtr<T> GetSnapshot() const {
-        ArcRawPtr* raw1 = HandleStore::GetPointerUnsafe(handle_);
-        if (raw1) raw1->c.fetch_add(1);
-        // Double check raw pointer is still visible via handle
-        ArcRawPtr* raw2 = HandleStore::GetPointerUnsafe(handle_);
-        if (raw2) {
-            return SnapshotPtr<T>(raw2);
+        auto tmp = SnapshotPtr<T>(HandleStore::GetPointerUnsafe(handle_));
+        if (*tmp && HandleStore::GetPointerUnsafe(handle_)) {
+            return SnapshotPtr<T>(HandleStore::GetPointerUnsafe(handle_));
         } else {
-            if (raw1) {
-                auto tmp = SnapshotPtr<T>(raw1);
-            }
             return {nullptr};
         }
     }
@@ -213,7 +213,7 @@ void main01() {
 }
 
 int main() {
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 10000; ++i) {
         // std::cout << std::endl;
         main01();
         // std::cout << std::endl;
