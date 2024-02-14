@@ -21,7 +21,7 @@ private:
 
 public:
     static Handle CreateHandle(void* ptr) {
-        return slot_map.emplace(ptr, 0);
+        return slot_map.emplace(ptr, 1);
     }
 
     static ArcRawPtr* GetPointerUnsafe(Handle handle) {
@@ -43,11 +43,7 @@ private:
     ArcRawPtr* ptr_;
 
 public:
-    SnapshotPtr(ArcRawPtr* ptr) : ptr_(ptr) {
-        if (ptr_ == nullptr) return;
-
-        ptr_->c.fetch_add(1);
-    }
+    SnapshotPtr(ArcRawPtr* ptr) : ptr_(ptr) {}
 
     // This type is neither moveable nor copyable
     SnapshotPtr(SnapshotPtr&& rhs) = delete;
@@ -87,8 +83,19 @@ private:
 public:
     UnownedPtr(Handle handle) : handle_(handle) {}
 
-    SnapshotPtr<T> Get() const {
-        return SnapshotPtr<T>(HandleStore::GetPointerUnsafe(handle_));
+    SnapshotPtr<T> GetSnapshot() const {
+        ArcRawPtr* raw1 = HandleStore::GetPointerUnsafe(handle_);
+        if (raw1) raw1->c.fetch_add(1);
+        // Double check raw pointer is still visible via handle
+        ArcRawPtr* raw2 = HandleStore::GetPointerUnsafe(handle_);
+        if (raw2) {
+            return SnapshotPtr<T>(raw2);
+        } else {
+            if (raw1) {
+                auto tmp = SnapshotPtr<T>(raw1);
+            }
+            return {nullptr};
+        }
     }
 };
 
@@ -180,7 +187,7 @@ public:
     }
 
     const void Render() const {
-        SnapshotPtr<UserService> usrv = usrv_.Get();
+        SnapshotPtr<UserService> usrv = usrv_.GetSnapshot();
         if (*usrv) {
             auto host = usrv->GetHost();
             assert(host != "INVALID");
