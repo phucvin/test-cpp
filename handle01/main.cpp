@@ -54,11 +54,7 @@ public:
     SnapshotPtr(const SnapshotPtr&) = delete;
 
     ~SnapshotPtr() {
-        if (ptr_ == nullptr) return;
-
-        if (ptr_->c.fetch_sub(1) == 1) {
-            delete (T*)ptr_->ptr;
-        }
+        Reset();
     }
 
     T* operator *() const {
@@ -71,6 +67,15 @@ public:
         if (ptr_ == nullptr) return nullptr;
 
         return (T*)ptr_->ptr;
+    }
+
+    void Reset() {
+        if (ptr_ == nullptr) return;
+
+        if (ptr_->c.fetch_sub(1) == 1) {
+            delete (T*)ptr_->ptr;
+        }
+        ptr_ = nullptr;
     }
 };
 
@@ -132,6 +137,7 @@ public:
         HandleStore::InvalidateHandle(handle_);
         ptr_ = nullptr;
         handle_ = {};
+        first_snapshot_.Reset();
     }
 };
 
@@ -200,7 +206,7 @@ void main01() {
 }
 
 int main() {
-    for (int i = 0; i < 10000; ++i) {
+    for (int i = 0; i < 1000; ++i) {
         // std::cout << std::endl;
         main01();
         // std::cout << std::endl;
