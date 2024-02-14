@@ -99,7 +99,10 @@ private:
     UserService(const std::string& host) : host_(host) {}
 
 public:
-    ~UserService() { std::cout << "~UserService" << std::endl; }
+    ~UserService() {
+        host_ = "INVALID";
+        std::cout << "~UserService" << std::endl;
+    }
 
     static OwnedPtr<UserService> New(const std::string& host) {
         auto* ptr = new UserService(host);
@@ -128,7 +131,9 @@ public:
     const void Render() const {
         UserService* usrv = usrv_.Get();
         if (usrv) {
-            std::cout << "calling " << usrv->GetHost() << std::endl;
+            auto host = usrv->GetHost();
+            assert(host != "INVALID");
+            std::cout << "calling " << host << std::endl;
         } else {
             std::cout << "skip rendering since UserService is null" << std::endl;
         }
@@ -139,16 +144,14 @@ void main01() {
     OwnedPtr<UserService> usrv = UserService::New("userservice.api.com");
     OwnedPtr<UserPage> upage = UserPage::New(usrv.GetUnowned());
     std::barrier barrier(2);
-    std::thread t1([&] {
+    std::jthread t1([&] {
         barrier.arrive_and_wait();
         upage->Render();
     });
-    std::thread t2([&] {
+    std::jthread t2([&] {
         barrier.arrive_and_wait();
         usrv.Reset();
     });
-    t1.join();
-    t2.join();
 }
 
 int main() {
