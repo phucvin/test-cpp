@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <mutex>
 #include <vector>
 #include <cassert>
 
@@ -17,25 +18,29 @@ typedef dod::slot_map_key64<ArcRawPtr> Handle;
 
 class HandleStore {
 private:
-    static dod::slot_map64<ArcRawPtr> slot_map;
+    static std::mutex mutex_;
+    static dod::slot_map64<ArcRawPtr> slot_map_;
 
 public:
     static Handle CreateHandle(void* ptr) {
-        return slot_map.emplace(ptr, 0);
+        std::lock_guard<std::mutex> lock(mutex_);
+        return slot_map_.emplace(ptr, 0);
     }
 
     static ArcRawPtr* GetPointerUnsafe(Handle handle) {
-        ArcRawPtr* pptr = slot_map.get(handle);
+        ArcRawPtr* pptr = slot_map_.get(handle);
         if (pptr == nullptr) return nullptr;
         return pptr;
     }
 
     static void InvalidateHandle(Handle handle) {
-        slot_map.erase(handle);
+        std::lock_guard<std::mutex> lock(mutex_);
+        slot_map_.erase(handle);
     }
 };
 
-dod::slot_map64<ArcRawPtr> HandleStore::slot_map{};
+std::mutex HandleStore::mutex_{};
+dod::slot_map64<ArcRawPtr> HandleStore::slot_map_{};
 
 template<typename T>
 class SnapshotPtr {
