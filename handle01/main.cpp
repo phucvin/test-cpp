@@ -32,7 +32,7 @@ public:
     }
 
     static void InvalidateHandle(Handle handle) {
-        // slot_map_.erase(handle);
+        slot_map_.erase(handle);
     }
 };
 
