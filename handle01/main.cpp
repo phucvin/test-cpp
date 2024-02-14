@@ -38,12 +38,12 @@ public:
 dod::slot_map64<ArcRawPtr> HandleStore::slot_map_{};
 
 template<typename T>
-class SnapshotPtr {
+class TempPtr {
 private:
     ArcRawPtr* ptr_;
 
 public:
-    SnapshotPtr(Handle handle) : ptr_(nullptr) {
+    TempPtr(Handle handle) : ptr_(nullptr) {
         ArcRawPtr* raw1 = HandleStore::GetPointerUnsafe(handle);
         if (raw1) raw1->c.fetch_add(1);
         // Double check after increasing atomic counter
@@ -54,10 +54,10 @@ public:
     }
 
     // This type is neither moveable nor copyable
-    SnapshotPtr(SnapshotPtr&& rhs) = delete;
-    SnapshotPtr(const SnapshotPtr&) = delete;
+    TempPtr(TempPtr&& rhs) = delete;
+    TempPtr(const TempPtr&) = delete;
 
-    ~SnapshotPtr() {
+    ~TempPtr() {
         Reset();
     }
 
@@ -93,8 +93,8 @@ private:
 public:
     Unowned(Handle handle) : handle_(handle) {}
 
-    SnapshotPtr<T> GetSnapshot() const {
-        return SnapshotPtr<T>(handle_);
+    TempPtr<T> GetTempPtr() const {
+        return TempPtr<T>(handle_);
     }
 };
 
@@ -103,13 +103,13 @@ class Owned {
 private:
     T* ptr_;
     Handle handle_;
-    SnapshotPtr<T> first_snapshot_;
+    TempPtr<T> first_temp_ptr_;
 
 public:
     Owned(T* ptr, Handle handle) :
             ptr_(ptr),
             handle_(handle),
-            first_snapshot_(handle_)
+            first_temp_ptr_(handle_)
     {}
 
     // This type is moveable but not copyable
@@ -143,7 +143,7 @@ public:
         HandleStore::InvalidateHandle(handle_);
         ptr_ = nullptr;
         handle_ = {};
-        first_snapshot_.Reset();
+        first_temp_ptr_.Reset();
     }
 };
 
@@ -186,7 +186,7 @@ public:
     }
 
     void Render() {
-        SnapshotPtr<UserService> usrv = usrv_.GetSnapshot();
+        TempPtr<UserService> usrv = usrv_.GetTempPtr();
         if (*usrv) {
             auto host = usrv->GetHost();
             assert(host != "INVALID");
