@@ -7,26 +7,26 @@
 #include <cstdint>
 #include <cassert>
 
-#include "slot_map2.h"
+#include "slot_map3.h"
 
 struct ArcRawPtr {
     void* ptr;
     std::atomic_int c;
 };
 
-typedef int64_t Handle;
+typedef Attractadore::SlotMapKey Handle;
 
 class HandleStore {
 private:
-    static TSlotMap<ArcRawPtr> slot_map_;
+    static Attractadore::DenseSlotMap<ArcRawPtr> slot_map_;
 
 public:
     static Handle CreateHandle(void* ptr) {
-        return slot_map_.push_back(ptr, 0);
+        return slot_map_.emplace(ptr, 0)->first;
     }
 
     static ArcRawPtr* GetPointerUnsafe(Handle handle) {
-        ArcRawPtr* pptr = slot_map_[handle];
+        ArcRawPtr* pptr = slot_map_.get(handle);
         if (pptr == nullptr) return nullptr;
         return pptr;
     }
@@ -36,7 +36,7 @@ public:
     }
 };
 
-TSlotMap<ArcRawPtr> HandleStore::slot_map_{};
+Attractadore::DenseSlotMap<ArcRawPtr> HandleStore::slot_map_{};
 
 template<typename T>
 class SnapshotPtr {
