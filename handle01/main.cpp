@@ -21,7 +21,7 @@ private:
 
 public:
     static Handle CreateHandle(void* ptr) {
-        return slot_map.emplace(ptr, 1);
+        return slot_map.emplace(ptr, 0);
     }
 
     static ArcRawPtr* GetPointerUnsafe(Handle handle) {
@@ -43,22 +43,33 @@ private:
     ArcRawPtr* ptr_;
 
 public:
-    SnapshotPtr(ArcRawPtr* ptr) : ptr_(ptr) {}
+    SnapshotPtr(ArcRawPtr* ptr) : ptr_(ptr) {
+        if (ptr_ == nullptr) return;
+
+        ptr_->c.fetch_add(1);
+    }
+
     // This type is neither moveable nor copyable
     SnapshotPtr(SnapshotPtr&& rhs) = delete;
     SnapshotPtr(const SnapshotPtr&) = delete;
 
     ~SnapshotPtr() {
+        if (ptr_ == nullptr) return;
+
         if (ptr_->c.fetch_sub(1) == 1) {
             delete (T*)ptr_->ptr;
         }
     }
 
     T* operator *() const {
+        if (ptr_ == nullptr) return nullptr;
+
         return (T*)ptr_->ptr;
     }
 
     T* operator ->() const {
+        if (ptr_ == nullptr) return nullptr;
+
         return (T*)ptr_->ptr;
     }
 };
@@ -81,9 +92,14 @@ class OwnedPtr {
 private:
     T* ptr_;
     Handle handle_;
+    SnapshotPtr<T> first_snapshot_;
 
 public:
-    OwnedPtr(T* ptr, Handle handle) : ptr_(ptr), handle_(handle) {}
+    OwnedPtr(T* ptr, Handle handle) :
+            ptr_(ptr),
+            handle_(handle),
+            first_snapshot_(HandleStore::GetPointerUnsafe(handle_))
+    {}
 
     // This type is moveable but not copyable
     OwnedPtr(OwnedPtr&& rhs) {
@@ -114,8 +130,6 @@ public:
         if (ptr_ == nullptr) return;
 
         HandleStore::InvalidateHandle(handle_);
-        // TODO: Use thread-safe memory reclamation
-        delete ptr_;
         ptr_ = nullptr;
         handle_ = {};
     }
@@ -186,7 +200,7 @@ void main01() {
 }
 
 int main() {
-    for (int i = 0; i < 100000; ++i) {
+    for (int i = 0; i < 10000; ++i) {
         // std::cout << std::endl;
         main01();
         // std::cout << std::endl;
