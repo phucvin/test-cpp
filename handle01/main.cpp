@@ -10,7 +10,7 @@
 
 struct ArcRawPtr {
     void* ptr;
-    std::atomic<int> c;
+    std::atomic_int c;
 };
 
 typedef dod::slot_map_key64<ArcRawPtr> Handle;
@@ -21,13 +21,13 @@ private:
 
 public:
     static Handle CreateHandle(void* ptr) {
-        return slot_map.emplace(ptr, 0);
+        return slot_map.emplace(ptr, 1);
     }
 
-    static void* GetPointerUnsafe(Handle handle) {
+    static ArcRawPtr* GetPointerUnsafe(Handle handle) {
         ArcRawPtr* pptr = slot_map.get(handle);
         if (pptr == nullptr) return nullptr;
-        else return pptr->ptr;
+        return pptr;
     }
 
     static void InvalidateHandle(Handle handle) {
@@ -38,6 +38,32 @@ public:
 dod::slot_map64<ArcRawPtr> HandleStore::slot_map{};
 
 template<typename T>
+class SnapshotPtr {
+private:
+    ArcRawPtr* ptr_;
+
+public:
+    SnapshotPtr(ArcRawPtr* ptr) : ptr_(ptr) {}
+    // This type is neither moveable nor copyable
+    SnapshotPtr(SnapshotPtr&& rhs) = delete;
+    SnapshotPtr(const SnapshotPtr&) = delete;
+
+    ~SnapshotPtr() {
+        if (ptr_->c.fetch_sub(1) == 1) {
+            delete (T*)ptr_->ptr;
+        }
+    }
+
+    T* operator *() const {
+        return (T*)ptr_->ptr;
+    }
+
+    T* operator ->() const {
+        return (T*)ptr_->ptr;
+    }
+};
+
+template<typename T>
 class UnownedPtr {
 private:
     Handle handle_;
@@ -45,9 +71,8 @@ private:
 public:
     UnownedPtr(Handle handle) : handle_(handle) {}
 
-    // TODO: Return wrapped pointer to allow RAII
-    T* Get() const {
-        return (T*)HandleStore::GetPointerUnsafe(handle_);
+    SnapshotPtr<T> Get() const {
+        return SnapshotPtr<T>(HandleStore::GetPointerUnsafe(handle_));
     }
 };
 
@@ -135,8 +160,8 @@ public:
     }
 
     const void Render() const {
-        UserService* usrv = usrv_.Get();
-        if (usrv) {
+        SnapshotPtr<UserService> usrv = usrv_.Get();
+        if (*usrv) {
             auto host = usrv->GetHost();
             assert(host != "INVALID");
             // std::cout << "calling " << host << std::endl;
