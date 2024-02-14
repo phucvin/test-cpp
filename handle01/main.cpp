@@ -171,8 +171,9 @@ public:
 class UserPage {
 private:
     UnownedPtr<UserService> usrv_;
+    SnapshotPtr<UserService> tmp_usrv;
 
-    UserPage(UnownedPtr<UserService> usrv) : usrv_(usrv) {}
+    UserPage(UnownedPtr<UserService> usrv) : usrv_(usrv), tmp_usrv({}) {}
 
 public:
     ~UserPage() {
@@ -185,8 +186,9 @@ public:
         return OwnedPtr<UserPage>(ptr, handle);
     }
 
-    const void Render() const {
+    void Render() {
         SnapshotPtr<UserService> usrv = usrv_.GetSnapshot();
+        tmp_usrv = std::move(usrv_.GetSnapshot());
         if (*usrv) {
             auto host = usrv->GetHost();
             assert(host != "INVALID");
