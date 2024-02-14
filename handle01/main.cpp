@@ -12,26 +12,21 @@
 
 ENABLE_LOCAL_DOMAIN
 
-struct ArcRawPtr {
-    void* ptr;
-    std::atomic_int c;
-};
-
-typedef dod::slot_map_key64<ArcRawPtr> Handle;
+typedef dod::slot_map_key64<void*> Handle;
 
 class HandleStore {
 private:
-    static dod::slot_map64<ArcRawPtr> slot_map_;
+    static dod::slot_map64<void*> slot_map_;
 
 public:
     static Handle CreateHandle(void* ptr) {
-        return slot_map_.emplace(ptr, 0);
+        return slot_map_.emplace(ptr);
     }
 
-    static ArcRawPtr* GetPointerUnsafe(Handle handle) {
-        ArcRawPtr* pptr = slot_map_.get(handle);
-        if (pptr == nullptr) return nullptr;
-        return pptr;
+    static void* GetPointerUnsafe(Handle handle) {
+        void** pptr = slot_map_.get(handle);
+        if (pptr == nullptr || *pptr == nullptr) return nullptr;
+        return *pptr;
     }
 
     static void InvalidateHandle(Handle handle) {
@@ -39,22 +34,19 @@ public:
     }
 };
 
-dod::slot_map64<ArcRawPtr> HandleStore::slot_map_{};
+dod::slot_map64<void*> HandleStore::slot_map_{};
 
 template<typename T>
 class TempPtr {
 private:
-    ArcRawPtr* ptr_;
+    HazPtrHolder holder_;
+    T* ptr_;
 
 public:
     TempPtr(Handle handle) : ptr_(nullptr) {
-        ArcRawPtr* raw1 = HandleStore::GetPointerUnsafe(handle);
-        if (raw1) raw1->c.fetch_add(1);
-        // Double check after increasing atomic counter
-        ArcRawPtr* raw2 = HandleStore::GetPointerUnsafe(handle);
-        if (raw2) {
-            ptr_ = raw2;
-        }
+        ptr_ = holder_.Pin<T>([handle]() {
+            return (T*)HandleStore::GetPointerUnsafe(handle);
+        });
     }
 
     // This type is neither moveable nor copyable
@@ -66,9 +58,7 @@ public:
     }
 
     T* Get() const {
-        if (ptr_ == nullptr) return nullptr;
-
-        return (T*)ptr_->ptr;
+        return ptr_;
     }
 
     T* operator *() const {
@@ -82,10 +72,7 @@ public:
     void Reset() {
         if (ptr_ == nullptr) return;
 
-        if (ptr_->c.fetch_sub(1) == 1) {
-            delete (T*)ptr_->ptr;
-        }
-        ptr_ = nullptr;
+        // TODO
     }
 };
 

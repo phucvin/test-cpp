@@ -249,6 +249,29 @@ public:
     }
 
     template<typename T>
+    T *Pin(std::function<T*()> getter) {
+        for (;;) {
+            T *ptr1 = getter();
+
+            if (!ptr1) {
+                return nullptr;
+            }
+
+            if (!Set(ptr1)) {
+                std::cerr << "This thread can only protect " << DEFAULT_HAZPTR_DOMAIN.slot_per_thread_ << " pointers"
+                          << std::endl;
+                exit(1);
+            }
+            T *ptr2 = getter();
+            if (ptr1 == ptr2) {
+                pinned_ = (void *) ptr1;
+                return ptr1;
+            }
+            Reset();
+        }
+    }
+
+    template<typename T>
     T *Pin(std::atomic<T *> &res) {
         for (;;) {
             T *ptr1 = res.load(std::memory_order_acquire);
