@@ -39,12 +39,9 @@ private:
 public:
     UnownedPtr(Handle handle) : handle_(handle) {}
 
+    // TODO: Return wrapped pointer to allow RAII
     T* Get() const {
         return (T*)HandleStore::GetPointerUnsafe(handle_);
-    }
-
-    T* operator ->() const {
-        return Get();
     }
 };
 
