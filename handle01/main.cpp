@@ -21,13 +21,13 @@ private:
 
 public:
     static Handle CreateHandle(void* ptr) {
-        return slot_map.emplace({ptr, 0});
+        return slot_map.emplace(ptr, 0);
     }
 
     static void* GetPointerUnsafe(Handle handle) {
-        void** pptr = slot_map.get(handle);
+        ArcRawPtr* pptr = slot_map.get(handle);
         if (pptr == nullptr) return nullptr;
-        else return *pptr;
+        else return pptr->ptr;
     }
 
     static void InvalidateHandle(Handle handle) {
@@ -35,7 +35,7 @@ public:
     }
 };
 
-dod::slot_map64<void*> HandleStore::slot_map{};
+dod::slot_map64<ArcRawPtr> HandleStore::slot_map{};
 
 template<typename T>
 class UnownedPtr {
