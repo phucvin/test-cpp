@@ -19,8 +19,8 @@ public:
 
     static void* GetPointerUnsafe(Handle handle) {
         void** pptr = slot_map.get(handle);
-        assert(pptr != nullptr);
-        return *pptr;
+        if (pptr == nullptr) return nullptr;
+        else return *pptr;
     }
 
     static void InvalidateHandle(Handle handle) {
@@ -38,8 +38,12 @@ private:
 public:
     UnownedPtr(Handle handle) : handle_(handle) {}
 
-    T* operator ->() const {
+    T* Get() const {
         return (T*)HandleStore::GetPointerUnsafe(handle_);
+    }
+
+    T* operator ->() const {
+        return Get();
     }
 };
 
@@ -121,20 +125,33 @@ public:
     }
 
     const void Render() const {
-        std::cout << "calling " << usrv_->GetHost() << std::endl;
+        UserService* usrv = usrv_.Get();
+        if (usrv) {
+            std::cout << "calling " << usrv->GetHost() << std::endl;
+        } else {
+            std::cout << "skip rendering since UserService is null" << std::endl;
+        }
     }
 };
 
-int main() {
+void main01() {
     OwnedPtr<UserService> usrv = UserService::New("userservice.api.com");
     OwnedPtr<UserPage> upage = UserPage::New(usrv.GetUnowned());
     std::thread t1([&] {
-        usrv.Reset();
+        upage->Render();
     });
     std::thread t2([&] {
-        upage->Render();
+        usrv.Reset();
     });
     t1.join();
     t2.join();
+}
+
+int main() {
+    for (int i = 0; i < 10; ++i) {
+        std::cout << std::endl;
+        main01();
+        std::cout << std::endl;
+    }
     return 0;
 }
