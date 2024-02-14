@@ -1,5 +1,5 @@
 ```
-clang++ -std=c++17 -o main main.cpp && ./main
+clang++ -pthread -std=c++17 -o main main.cpp && ./main
 ```
 
 TODO:

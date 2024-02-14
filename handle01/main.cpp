@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <thread>
 #include <vector>
 #include <cassert>
 
@@ -125,13 +126,15 @@ public:
 };
 
 int main() {
-    auto tmp = UserService::New("userservice.api.com");
-    std::cout << "user service handle " << tmp.GetHandle() << std::endl;
-    auto owned_usrv = std::move(tmp);
-    auto upage = UserPage::New(owned_usrv.GetUnowned());
-    owned_usrv.Reset();
-    auto tmp2 = UserService::New("userservice.api.com");
-    std::cout << "new user service handle " << tmp2.GetHandle() << std::endl;
-    upage->Render();
+    OwnedPtr<UserService> usrv = UserService::New("userservice.api.com");
+    OwnedPtr<UserPage> upage = UserPage::New(usrv.GetUnowned());
+    std::thread t1([&] {
+        usrv.Reset();
+    });
+    std::thread t2([&] {
+        upage->Render();
+    });
+    t1.join();
+    t2.join();
     return 0;
 }
