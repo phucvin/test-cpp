@@ -1,3 +1,4 @@
+#include <atomic>
 #include <barrier>
 #include <iostream>
 #include <string>
@@ -7,15 +8,20 @@
 
 #include "slot_map.h"
 
-typedef dod::slot_map_key64<void*> Handle;
+struct ArcRawPtr {
+    void* ptr;
+    std::atomic<int> c;
+};
+
+typedef dod::slot_map_key64<ArcRawPtr> Handle;
 
 class HandleStore {
 private:
-    static dod::slot_map64<void*> slot_map;
+    static dod::slot_map64<ArcRawPtr> slot_map;
 
 public:
     static Handle CreateHandle(void* ptr) {
-        return slot_map.emplace(ptr);
+        return slot_map.emplace({ptr, 0});
     }
 
     static void* GetPointerUnsafe(Handle handle) {
