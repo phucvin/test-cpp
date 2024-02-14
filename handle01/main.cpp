@@ -86,12 +86,12 @@ public:
 };
 
 template<typename T>
-class UnownedPtr {
+class Unowned {
 private:
     Handle handle_;
 
 public:
-    UnownedPtr(Handle handle) : handle_(handle) {}
+    Unowned(Handle handle) : handle_(handle) {}
 
     SnapshotPtr<T> GetSnapshot() const {
         return SnapshotPtr<T>(handle_);
@@ -99,29 +99,29 @@ public:
 };
 
 template<typename T>
-class OwnedPtr {
+class Owned {
 private:
     T* ptr_;
     Handle handle_;
     SnapshotPtr<T> first_snapshot_;
 
 public:
-    OwnedPtr(T* ptr, Handle handle) :
+    Owned(T* ptr, Handle handle) :
             ptr_(ptr),
             handle_(handle),
             first_snapshot_(handle_)
     {}
 
     // This type is moveable but not copyable
-    OwnedPtr(OwnedPtr&& rhs) {
+    Owned(Owned&& rhs) {
         this->ptr_ = rhs.ptr_;
         this->handle_ = rhs.handle_;
         rhs.ptr_ = nullptr;
         rhs.handle_ = {};
     }
-    OwnedPtr(const OwnedPtr&) = delete;
+    Owned(const Owned&) = delete;
 
-    ~OwnedPtr() {
+    ~Owned() {
         Reset();
     }
 
@@ -129,8 +129,8 @@ public:
         return handle_;
     }
 
-    UnownedPtr<T> GetUnowned() {
-        return UnownedPtr<T>(handle_);
+    Unowned<T> GetUnowned() {
+        return Unowned<T>(handle_);
     }
 
     T* operator ->() const {
@@ -159,10 +159,10 @@ public:
         // std::cout << "~UserService" << std::endl;
     }
 
-    static OwnedPtr<UserService> New(const std::string& host) {
+    static Owned<UserService> New(const std::string& host) {
         auto* ptr = new UserService(host);
         Handle handle = HandleStore::CreateHandle(ptr);
-        return OwnedPtr<UserService>(ptr, handle);
+        return Owned<UserService>(ptr, handle);
     }
 
     const std::string& GetHost() const { return host_; }
@@ -170,19 +170,19 @@ public:
 
 class UserPage {
 private:
-    UnownedPtr<UserService> usrv_;
+    Unowned<UserService> usrv_;
 
-    UserPage(UnownedPtr<UserService> usrv) : usrv_(usrv) {}
+    UserPage(Unowned<UserService> usrv) : usrv_(usrv) {}
 
 public:
     ~UserPage() {
         // std::cout << "~UserPage" << std::endl;
     }
 
-    static OwnedPtr<UserPage> New(UnownedPtr<UserService> usrv) {
+    static Owned<UserPage> New(Unowned<UserService> usrv) {
         auto* ptr = new UserPage(usrv);
         Handle handle = HandleStore::CreateHandle(ptr);
-        return OwnedPtr<UserPage>(ptr, handle);
+        return Owned<UserPage>(ptr, handle);
     }
 
     void Render() {
@@ -198,8 +198,8 @@ public:
 };
 
 void main01() {
-    OwnedPtr<UserService> usrv = UserService::New("userservice.api.com");
-    OwnedPtr<UserPage> upage = UserPage::New(usrv.GetUnowned());
+    Owned<UserService> usrv = UserService::New("userservice.api.com");
+    Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
     std::barrier barrier(2);
     std::jthread t1([&] {
         barrier.arrive_and_wait();
