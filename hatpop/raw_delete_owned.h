@@ -42,6 +42,7 @@ public:
     void Release() {
         if (ptr_ == nullptr) return;
         
+        HandleStore::GetSingleton()->Erase(handle_);
         delete ptr_;
         ptr_ = nullptr;
     }
