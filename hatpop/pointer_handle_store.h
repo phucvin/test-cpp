@@ -1,3 +1,5 @@
+#pragma once
+
 namespace htp {
 
 typedef void* Handle;
@@ -13,6 +15,7 @@ public:
     void* GetUnsafe(Handle handle) {
         return handle;
     }
+
     void Erase(Handle handle) {
         return;
     }
