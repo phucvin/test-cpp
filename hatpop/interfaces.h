@@ -3,9 +3,9 @@
 template<typename HandleT>
 class IHandleStore {
 public:
-    HandleT CreateForPointer(void* ptr);
+    HandleT Create(void* ptr);
 
-    void* GetPointerUnsafe(HandleT handle);
+    void* GetUnsafe(HandleT handle);
 
     void Erase(HandleT handle);
 };
