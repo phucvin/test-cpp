@@ -191,7 +191,7 @@ public:
 void main01(ctpl::thread_pool& pool) {
     Owned<UserService> usrv = UserService::New("userservice.api.com");
     Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
-    // std::barrier bar(2);
+    // std::barrier bar(2);  // This is optional, but will increase total time
     std::atomic_int done_count;
     pool.push([&](int) {
         // bar.arrive_and_wait();
@@ -209,7 +209,7 @@ void main01(ctpl::thread_pool& pool) {
 int main() {
     HazPtrInit();
     ctpl::thread_pool pool(2);
-    {
+    if (false) {
         AutoTimer timer;
         for (int i = 0; i < 1000000; ++i) {
             std::atomic_int done_count;
