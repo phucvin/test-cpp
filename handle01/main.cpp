@@ -93,13 +93,11 @@ class Owned {
 private:
     T* ptr_;
     Handle handle_;
-    TempPtr<T> first_temp_ptr_;
 
 public:
     Owned(T* ptr, Handle handle) :
             ptr_(ptr),
-            handle_(handle),
-            first_temp_ptr_(handle_)
+            handle_(handle)
     {}
 
     // This type is moveable but not copyable
@@ -130,12 +128,11 @@ public:
     void Reset() {
         if (ptr_ == nullptr) return;
 
-        T* tmp = ptr_;
+        HazPtrRetire(ptr_);
+
         HandleStore::InvalidateHandle(handle_);
         ptr_ = nullptr;
         handle_ = {};
-        first_temp_ptr_.Reset();
-        HazPtrRetire(tmp);
     }
 };
 
