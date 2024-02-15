@@ -190,19 +190,19 @@ public:
     }
 };
 
-void main01(ctpl::thread_pool& pool1, ctpl::thread_pool& pool2) {
+void main01(ctpl::thread_pool& pool) {
     Owned<UserService> usrv = UserService::New("userservice.api.com");
     Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
     std::barrier barrier1(2);
     std::atomic_int t;
-    pool1.push([&](int) {
+    pool.push([&](int) {
         // std::cout << "t1" << std::endl;
         barrier1.arrive_and_wait();
         upage->Render();
         // std::cout << "t1-" << std::endl;
         t.fetch_add(1);
     });
-    pool2.push([&](int) {
+    pool.push([&](int) {
         // std::cout << "t2" << std::endl;
         barrier1.arrive_and_wait();
         usrv.Reset();
@@ -216,13 +216,12 @@ void main01(ctpl::thread_pool& pool1, ctpl::thread_pool& pool2) {
 
 int main() {
     HazPtrInit();
-    ctpl::thread_pool pool1(1);
-    ctpl::thread_pool pool2(1);
+    ctpl::thread_pool pool(2);
     {
         AutoTimer timer;
         for (int i = 0; i < 100; ++i) {
             // std::cout << std::endl;
-            main01(pool1, pool2);
+            main01(pool);
             // std::cout << std::endl;
         }
     }
