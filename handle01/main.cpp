@@ -192,18 +192,29 @@ void main01(ctpl::thread_pool& pool) {
     Owned<UserService> usrv = UserService::New("userservice.api.com");
     Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
     std::barrier bar(2);
-    std::atomic_int t;
+    std::condition_variable cv;
+    std::mutex mu;
+    int done_count = 0;
     pool.push([&](int) {
         bar.arrive_and_wait();
+
         upage.GetTempPtr()->Render();
-        t.fetch_add(1);
+
+        std::lock_guard<std::mutex> lock(mu);
+        done_count += 1;
+        cv.notify_one();
     });
     pool.push([&](int) {
         bar.arrive_and_wait();
+
         usrv.Reset();
-        t.fetch_add(1);
+
+        std::lock_guard<std::mutex> lock(mu);
+        done_count += 1;
+        cv.notify_one();
     });
-    while (t.fetch_add(0) < 2) continue;
+    std::unique_lock<std::mutex> lock(mu);
+    cv.wait(lock, [&] { return done_count == 2; });
 }
 
 int main() {
