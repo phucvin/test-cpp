@@ -41,14 +41,17 @@ dod::slot_map64<void*> HandleStore::slot_map_{};
 template<typename T>
 class TempPtr {
 private:
-    HazPtrHolder holder_;
+    // HazPtrHolder holder_;
     T* ptr_;
 
 public:
     TempPtr(Handle handle) : ptr_(nullptr) {
+        /*
         ptr_ = holder_.Pin<T>([handle]() {
             return (T*)HandleStore::GetPointerUnsafe(handle);
         });
+        */
+        ptr_ = (T*)HandleStore::GetPointerUnsafe(handle);
     }
 
     // This type is neither moveable nor copyable
@@ -129,7 +132,7 @@ public:
     void Reset() {
         if (ptr_ == nullptr) return;
 
-        HazPtrRetire(ptr_);
+        // HazPtrRetire(ptr_);
         // delete ptr_;  // Doing this instead of retire will segfault or assert
 
         HandleStore::InvalidateHandle(handle_);
@@ -191,30 +194,19 @@ public:
 void main01(ctpl::thread_pool& pool) {
     Owned<UserService> usrv = UserService::New("userservice.api.com");
     Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
-    std::barrier bar(2);
-    std::condition_variable cv;
-    std::mutex mu;
-    int done_count = 0;
+    // std::barrier bar(2);
+    std::atomic_int done_count;
     pool.push([&](int) {
-        bar.arrive_and_wait();
-
+        // bar.arrive_and_wait();
         upage.GetTempPtr()->Render();
-
-        std::lock_guard<std::mutex> lock(mu);
-        done_count += 1;
-        cv.notify_one();
+        done_count.fetch_add(1);
     });
     pool.push([&](int) {
-        bar.arrive_and_wait();
-
+        // bar.arrive_and_wait();
         usrv.Reset();
-
-        std::lock_guard<std::mutex> lock(mu);
-        done_count += 1;
-        cv.notify_one();
+        done_count.fetch_add(1);
     });
-    std::unique_lock<std::mutex> lock(mu);
-    cv.wait(lock, [&] { return done_count == 2; });
+    while (done_count.load() < 2) continue;
 }
 
 int main() {
@@ -222,7 +214,7 @@ int main() {
     ctpl::thread_pool pool(2);
     {
         AutoTimer timer;
-        for (int i = 0; i < 10000; ++i) {
+        for (int i = 0; i < 1000000; ++i) {
             // std::cout << std::endl;
             main01(pool);
             // std::cout << std::endl;
