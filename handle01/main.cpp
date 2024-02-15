@@ -191,27 +191,27 @@ public:
 };
 
 void main01(ctpl::thread_pool& pool1, ctpl::thread_pool& pool2) {
-    // Owned<UserService> usrv = UserService::New("userservice.api.com");
-    // Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
+    Owned<UserService> usrv = UserService::New("userservice.api.com");
+    Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
     std::barrier barrier1(2);
-    // std::barrier barrier2(2);
+    std::atomic_int t;
     pool1.push([&](int) {
-        std::cout << "t1" << std::endl;
+        // std::cout << "t1" << std::endl;
         barrier1.arrive_and_wait();
-        // upage->Render();
-        // barrier2.arrive_and_wait();
-        std::cout << "t1-" << std::endl;
+        upage->Render();
+        // std::cout << "t1-" << std::endl;
+        t.fetch_add(1);
     });
     pool2.push([&](int) {
-        std::cout << "t2" << std::endl;
+        // std::cout << "t2" << std::endl;
         barrier1.arrive_and_wait();
-        // usrv.Reset();
-        // barrier2.arrive_and_wait();
-        std::cout << "t2-" << std::endl;
+        usrv.Reset();
+        // std::cout << "t2-" << std::endl;
+        t.fetch_add(1);
     });
-    std::cout << "t0" << std::endl;
-    barrier1.wait();
-    std::cout << "t0-" << std::endl;
+    // std::cout << "t0" << std::endl;
+    while (t.fetch_add(0) < 2) continue;
+    // std::cout << "t0-" << std::endl;
 }
 
 int main() {
