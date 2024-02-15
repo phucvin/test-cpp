@@ -204,7 +204,7 @@ void main01() {
 }
 
 int main() {
-    HazPtrInit(10000, 2);
+    HazPtrInit();
     {
         AutoTimer timer;
         for (int i = 0; i < 10000; ++i) {
