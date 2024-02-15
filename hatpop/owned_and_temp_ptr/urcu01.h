@@ -42,6 +42,7 @@ public:
     ~TempPtr() { Release(); }
     T* operator *() const { return Get(); }
     T* operator ->() const { return Get(); }
+    operator bool() const { return Get() != nullptr; }
 
     T* Get() const { return ptr_; }
 
