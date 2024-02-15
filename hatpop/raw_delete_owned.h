@@ -9,7 +9,10 @@ private:
     T* ptr_;
 
 public:
-    TempPtr(Handle handle) : handle_(handle), ptr_((T*)handle) {}
+    TempPtr(Handle handle) : handle_(handle), ptr_(nullptr) {
+        ptr_ = (T*)HandleStore::GetSingleton()->GetUnsafe(handle);
+    }
+
     // This type is neither moveable nor copyable
     TempPtr(TempPtr&& rhs) = delete;
     TempPtr(const TempPtr&) = delete;
