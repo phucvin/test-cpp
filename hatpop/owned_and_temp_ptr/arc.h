@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <memory>
+#include <cassert>
 
 namespace htp {
 
@@ -15,13 +16,13 @@ public:
     TempPtr(Handle handle, std::shared_ptr<std::atomic_int> arc)
             : ptr_(nullptr), arc_(std::move(arc)) {
         if (arc_->fetch_add(1) <= 0) {
-            arc_->fetch_sub(1);
+            assert(arc_->fetch_sub(1) == 0);
             arc_.reset();
             return;
         }
         ptr_ = (T*)HandleStore::GetSingleton()->GetUnsafe(handle);
         if (ptr_ == nullptr) {
-            arc_->fetch_sub(1);
+            assert(arc_->fetch_sub(1) == 0);
             arc_.reset();
             return;
         }
