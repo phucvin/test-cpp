@@ -129,6 +129,7 @@ public:
         if (ptr_ == nullptr) return;
 
         HazPtrRetire(ptr_);
+        // delete ptr_;  // Doing this instead of retire will segfault or assert
 
         HandleStore::InvalidateHandle(handle_);
         ptr_ = nullptr;
@@ -215,7 +216,7 @@ int main() {
     ctpl::thread_pool pool(2);
     {
         AutoTimer timer;
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 1000000; ++i) {
             // std::cout << std::endl;
             main01(pool);
             // std::cout << std::endl;
