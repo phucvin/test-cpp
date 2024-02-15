@@ -21,7 +21,9 @@ public:
 };
 
 int main() {
-    auto usrv = htp::make_owned<UserService>("user.api.com");
-    std::cout << usrv.GetTempPtr()->GetUserName() << std::endl;
+    auto owned_usrv = htp::make_owned<UserService>("user.api.com");
+    if (auto usrv = owned_usrv.GetTempPtr(); usrv) {
+        std::cout << usrv->GetUserName() << std::endl;
+    }
     return 0;
 }
