@@ -140,23 +140,23 @@ public:
 
 class UserService {
 private:
-    int host_;
+    std::string host_;
 
-    UserService(int host) : host_(host) {}
+    UserService(const std::string& host) : host_(host) {}
 
 public:
     ~UserService() {
-        host_ = -1;
+        host_ = "INVALID";
         // std::cout << "~UserService" << std::endl;
     }
 
-    static Owned<UserService> New(int host) {
+    static Owned<UserService> New(const std::string& host) {
         auto* ptr = new UserService(host);
         Handle handle = HandleStore::CreateHandle(ptr);
         return Owned<UserService>(ptr, handle);
     }
 
-    int GetHost() const { return host_; }
+    const std::string& GetHost() const { return host_; }
 };
 
 class UserPage {
@@ -180,7 +180,7 @@ public:
         TempPtr<UserService> usrv = usrv_.GetTempPtr();
         if (*usrv) {
             auto host = usrv->GetHost();
-            assert(host != -1);
+            assert(host != "INVALID");
             // std::cout << "calling " << host << std::endl;
         } else {
             // std::cout << "skip rendering since UserService is null" << std::endl;
@@ -189,7 +189,7 @@ public:
 };
 
 void main01(ctpl::thread_pool& pool) {
-    Owned<UserService> usrv = UserService::New(101);
+    Owned<UserService> usrv = UserService::New("userservice.api.com");
     Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
     // std::barrier bar(2);
     std::atomic_int done_count;
@@ -211,9 +211,15 @@ int main() {
     ctpl::thread_pool pool(2);
     {
         AutoTimer timer;
-        std::atomic_int tmp;
         for (int i = 0; i < 1000000; ++i) {
-            tmp.fetch_add(1);
+            std::atomic_int done_count;
+            pool.push([&](int) {
+                done_count.fetch_add(1);
+            });
+            pool.push([&](int) {
+                done_count.fetch_add(1);
+            });
+            while (done_count.load() < 2) continue;
         }
     }
     {
