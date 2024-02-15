@@ -14,6 +14,10 @@ public:
                 htp::HandleStore::GetSingleton()->Create(ptr));
     }
 
+    ~UserService() {
+        std::cout << "UserService:dtor" << std::endl;
+    }
+
     std::string GetUserName() const {
         return uname;
     }
