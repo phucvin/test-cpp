@@ -131,8 +131,9 @@ class HazPtrDomain {
     friend class HazPtrHolder;
 
 private:
-    std::atomic_int thread_idx_;
+    std::mutex mut_;
     std::vector<ProtectedSlot *> protected_;
+    std::vector<int> thread_idx_;
     size_t slot_per_thread_;
     size_t thread_cnt_;
 
@@ -147,7 +148,7 @@ public:
         for (size_t i = 0; i < thread_cnt_ * quota; i++) {
             protected_[i] = new ProtectedSlot;
         }
-        thread_idx_ = 0;
+        thread_idx_.resize(thread_cnt_, 0);
         slot_per_thread_ = quota;
     }
 
@@ -411,8 +412,16 @@ private:
     }
 
     static void SetDomainThreadIdx() {
-        HazPtrDomain::idx_ = DEFAULT_HAZPTR_DOMAIN.thread_idx_.fetch_add(1) %
-                DEFAULT_HAZPTR_DOMAIN.thread_cnt_;
+        std::lock_guard<std::mutex> lk(DEFAULT_HAZPTR_DOMAIN.mut_);
+        for (size_t i = 0; i < DEFAULT_HAZPTR_DOMAIN.thread_idx_.size(); i++) {
+            if (DEFAULT_HAZPTR_DOMAIN.thread_idx_[i] == 0) {
+                DEFAULT_HAZPTR_DOMAIN.thread_idx_[i] = 1;
+                HazPtrDomain::idx_ = i;
+                return;
+            }
+        }
+        std::cerr << "Thread amount excess limit" << std::endl;
+        exit(1);
     }
 };
 

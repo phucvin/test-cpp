@@ -9,6 +9,7 @@
 #include "slot_map.h"
 #include "haz_ptr.h"
 #include "auto_timer.h"
+#include "ThreadPool.h"
 
 ENABLE_LOCAL_DOMAIN
 
@@ -189,27 +190,32 @@ public:
     }
 };
 
-void main01() {
+void main01(ThreadPool& pool) {
     Owned<UserService> usrv = UserService::New("userservice.api.com");
     Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
-    std::barrier barrier(2);
-    std::jthread t1([&] {
-        barrier.arrive_and_wait();
+    std::barrier barrier1(2);
+    std::barrier barrier2(3);
+    pool.enqueue([&] {
+        barrier1.arrive_and_wait();
         upage->Render();
+        barrier2.arrive_and_wait();
     });
-    std::jthread t2([&] {
-        barrier.arrive_and_wait();
+    pool.enqueue([&] {
+        barrier1.arrive_and_wait();
         usrv.Reset();
+        barrier2.arrive_and_wait();
     });
+    barrier2.arrive_and_wait();
 }
 
 int main() {
     HazPtrInit();
+    ThreadPool pool(8);
     {
         AutoTimer timer;
-        for (int i = 0; i < 100000; ++i) {
+        for (int i = 0; i < 100; ++i) {
             // std::cout << std::endl;
-            main01();
+            main01(pool);
             // std::cout << std::endl;
         }
     }
