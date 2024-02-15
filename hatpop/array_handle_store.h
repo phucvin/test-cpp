@@ -38,11 +38,11 @@ public:
 };
 
 namespace {
-    HandleStore global_pointer_handle_store;
+    HandleStore global_handle_store;
 }  // namespace
 
 HandleStore* HandleStore::GetSingleton() {
-    return &global_pointer_handle_store;
+    return &global_handle_store;
 }
 
 }  // namespace htp
