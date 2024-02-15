@@ -191,18 +191,18 @@ public:
 };
 
 void main01(ThreadPool& pool1, ThreadPool& pool2) {
-    Owned<UserService> usrv = UserService::New("userservice.api.com");
-    Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
+    // Owned<UserService> usrv = UserService::New("userservice.api.com");
+    // Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
     std::barrier barrier1(2);
     std::barrier barrier2(3);
     pool1.enqueue([&] {
         barrier1.arrive_and_wait();
-        upage->Render();
+        // upage->Render();
         barrier2.arrive_and_wait();
     });
     pool2.enqueue([&] {
         barrier1.arrive_and_wait();
-        usrv.Reset();
+        // usrv.Reset();
         barrier2.arrive_and_wait();
     });
     barrier2.arrive_and_wait();
