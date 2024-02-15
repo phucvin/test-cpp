@@ -6,19 +6,22 @@ class IHandleStore {
 public:
     static IHandleStore* GetSingleton();
 
-    Handle Create(void* ptr);
+    virtual Handle Create(void* ptr) = 0;
 
-    void* GetUnsafe(Handle handle);
+    virtual void* GetUnsafe(Handle handle) = 0;
 
-    void Erase(Handle handle);
+    virtual void Erase(Handle handle) = 0;
 };
 
 template<typename T>
 class ITempPtr {
 public:
-    // This type is neither moveable nor copyable
+    ITempPtr() = default;
+    // TODO: Make this type is neither moveable nor copyable
+    /*
     ITempPtr(ITempPtr&& rhs) = delete;
     ITempPtr(const ITempPtr&) = delete;
+    */
 
     ~ITempPtr() {
         Release();
@@ -32,15 +35,15 @@ public:
         return Get();
     }
 
-    T* Get() const;
+    virtual T* Get() const = 0;
 
-    void Release();
+    virtual void Release() = 0;
 };
 
 template<typename T>
 class IUnowned {
 public:
-    ITempPtr<T> GetTempPtr() const;
+    virtual ITempPtr<T> GetTempPtr() const = 0;
 };
 
 template<typename T>
@@ -55,11 +58,11 @@ public:
         Release();
     }
 
-    IUnowned<T> GetUnowned() const;
+    virtual IUnowned<T> GetUnowned() const = 0;
 
-    ITempPtr<T> GetTempPtr() const;
+    virtual ITempPtr<T> GetTempPtr() const = 0;
 
-    void Release();
+    virtual void Release() = 0;
 };
 
 }  // namespace htp

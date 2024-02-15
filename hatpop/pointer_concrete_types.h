@@ -49,7 +49,7 @@ public:
     }
 
     ITempPtr<T> GetTempPtr() const {
-        return TempPtr<T>(handle_);
+        return TempPtr<T>((T*)handle_);
     }
 
     void Release() {
