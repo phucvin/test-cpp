@@ -1,13 +1,16 @@
 #pragma once
 
-template<typename HandleT>
+namespace htp {
+
 class IHandleStore {
 public:
-    HandleT Create(void* ptr);
+    static IHandleStore* GetSingleton();
 
-    void* GetUnsafe(HandleT handle);
+    Handle Create(void* ptr);
 
-    void Erase(HandleT handle);
+    void* GetUnsafe(Handle handle);
+
+    void Erase(Handle handle);
 };
 
 template<typename T>
@@ -57,3 +60,5 @@ public:
 
     void Release();
 };
+
+}  // namespace htp
