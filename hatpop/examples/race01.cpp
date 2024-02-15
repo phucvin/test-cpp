@@ -1,8 +1,12 @@
+#include <barrier>
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <thread>
+#include <cassert>
 
-#include "../hatpop_05.h"
+// #include "../hatpop_01.h"  // Will fail since there is no sync before deleting
+#include "../hatpop_05.h"  // Will success
 
 class Foo {
 private:
@@ -18,7 +22,8 @@ void race() {
     htp::Unowned<Foo> unowned_foo = owned_foo.GetUnowned();
     std::jthread t1([unowned_foo] {
         if (auto foo = unowned_foo.GetTempPtr(); foo) {
-            assert(foo->GetValue() != -1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            assert(foo->GetValue() == 101);
         }
     });
     std::jthread t2([&owned_foo] {
@@ -27,6 +32,7 @@ void race() {
 }
 
 int main() {
-    for (int i = 0; i < 100; ++i) race();
+    for (int i = 0; i < 10; ++i) race();
+    std::cout << "Success!" << std::endl;
     return 0;
 }
