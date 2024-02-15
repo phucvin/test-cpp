@@ -123,8 +123,8 @@ public:
         return Unowned<T>(handle_);
     }
 
-    T* operator ->() const {
-        return ptr_;
+    TempPtr<T> GetTempPtr() const {
+        return TempPtr<T>(handle_);
     }
 
     void Reset() {
@@ -197,7 +197,7 @@ void main01(ctpl::thread_pool& pool) {
     pool.push([&](int) {
         // std::cout << "t1" << std::endl;
         barrier1.arrive_and_wait();
-        upage->Render();
+        upage.GetTempPtr()->Render();
         // std::cout << "t1-" << std::endl;
         t.fetch_add(1);
     });
