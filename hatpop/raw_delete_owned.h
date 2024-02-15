@@ -30,10 +30,9 @@ private:
     Handle handle_;
 
 public:
-    Owned(T* ptr, Handle handle) :
-            ptr_(ptr),
-            handle_(handle)
-    {}
+    Owned(T* ptr) : ptr_(ptr) {
+        if (ptr_) handle_ = HandleStore::GetSingleton()->Create(ptr_);
+    }
 
     // This type is moveable but not copyable
     Owned(Owned&& rhs) {
@@ -62,6 +61,7 @@ public:
         HandleStore::GetSingleton()->Erase(handle_);
         delete ptr_;
         ptr_ = nullptr;
+        handle_ = {};
     }
 };
 

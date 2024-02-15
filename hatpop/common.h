@@ -23,9 +23,7 @@ class Owned;
 
 template<typename T, typename ...Args>
 Owned<T> make_owned(Args&& ...args) {
-    T* ptr = new T(std::forward<Args>(args)...);
-    Handle handle = HandleStore::GetSingleton()->Create(ptr);
-    return Owned<T>(ptr, handle);
+    return Owned<T>(new T(std::forward<Args>(args)...));
 }
 
 }  // namespace htp
