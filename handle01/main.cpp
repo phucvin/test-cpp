@@ -71,9 +71,6 @@ public:
     }
 
     void Reset() {
-        if (ptr_ == nullptr) return;
-
-        HazPtrRetire(ptr_);
         ptr_ = nullptr;
     }
 };
@@ -133,10 +130,12 @@ public:
     void Reset() {
         if (ptr_ == nullptr) return;
 
+        T* tmp = ptr_;
         HandleStore::InvalidateHandle(handle_);
         ptr_ = nullptr;
         handle_ = {};
         first_temp_ptr_.Reset();
+        HazPtrRetire(tmp);
     }
 };
 
