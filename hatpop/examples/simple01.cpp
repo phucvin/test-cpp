@@ -1,14 +1,14 @@
 #include <iostream>
 #include <string>
 
-#include "../hatpop_pointer_pointer.h"
+#include "../hatpop_01.h"
 
 class UserService {
 public:
     static htp::Owned<UserService> New() {
         UserService *ptr = new UserService();
         return htp::Owned<UserService>(ptr,
-                htp::IHandleStore::GetSingleton()->Create(ptr));
+                htp::HandleStore::GetSingleton()->Create(ptr));
     }
 
     std::string GetUserName() {

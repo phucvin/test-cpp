@@ -1,11 +1,11 @@
-#include "interfaces.h"
-
 namespace htp {
 
-namespace internal {
+typedef void* Handle;
 
-class PointerHandleStore : public IHandleStore {
+class HandleStore {
 public:
+    static HandleStore* GetSingleton();
+
     Handle Create(void* ptr) {
         return ptr;
     }
@@ -19,12 +19,12 @@ public:
     }
 };
 
-PointerHandleStore global_pointer_handle_store;
+namespace {
+    HandleStore global_pointer_handle_store;
+}  // namespace
 
-}  // namespace internal
-
-IHandleStore* IHandleStore::GetSingleton() {
-    return &internal::global_pointer_handle_store;
+HandleStore* HandleStore::GetSingleton() {
+    return &global_pointer_handle_store;
 }
 
 }  // namespace htp
