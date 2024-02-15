@@ -23,3 +23,4 @@ References:
 - https://github.com/topics/epoch-based-reclamation
 - https://github.com/rusnikola/lfsmr (Hyaline Reclamation), https://github.com/ibraheemdev/seize
 - https://concurrencyfreaks.blogspot.com/2017/08/why-is-memory-reclamation-so-important.html?m=1
+- https://concurrencyfreaks.blogspot.com/2016/08/hazard-pointers-vs-rcu.html
