@@ -41,17 +41,14 @@ dod::slot_map64<void*> HandleStore::slot_map_{};
 template<typename T>
 class TempPtr {
 private:
-    // HazPtrHolder holder_;
+    HazPtrHolder holder_;
     T* ptr_;
 
 public:
     TempPtr(Handle handle) : ptr_(nullptr) {
-        /*
         ptr_ = holder_.Pin<T>([handle]() {
             return (T*)HandleStore::GetPointerUnsafe(handle);
         });
-        */
-        ptr_ = (T*)HandleStore::GetPointerUnsafe(handle);
     }
 
     // This type is neither moveable nor copyable
@@ -132,7 +129,7 @@ public:
     void Reset() {
         if (ptr_ == nullptr) return;
 
-        // HazPtrRetire(ptr_);
+        HazPtrRetire(ptr_);
         // delete ptr_;  // Doing this instead of retire will segfault or assert
 
         HandleStore::InvalidateHandle(handle_);
@@ -143,23 +140,23 @@ public:
 
 class UserService {
 private:
-    std::string host_;
+    int host_;
 
-    UserService(const std::string& host) : host_(host) {}
+    UserService(int host) : host_(host) {}
 
 public:
     ~UserService() {
-        host_ = "INVALID";
+        host_ = -1;
         // std::cout << "~UserService" << std::endl;
     }
 
-    static Owned<UserService> New(const std::string& host) {
+    static Owned<UserService> New(int host) {
         auto* ptr = new UserService(host);
         Handle handle = HandleStore::CreateHandle(ptr);
         return Owned<UserService>(ptr, handle);
     }
 
-    const std::string& GetHost() const { return host_; }
+    int GetHost() const { return host_; }
 };
 
 class UserPage {
@@ -183,7 +180,7 @@ public:
         TempPtr<UserService> usrv = usrv_.GetTempPtr();
         if (*usrv) {
             auto host = usrv->GetHost();
-            assert(host != "INVALID");
+            assert(host != -1);
             // std::cout << "calling " << host << std::endl;
         } else {
             // std::cout << "skip rendering since UserService is null" << std::endl;
@@ -192,7 +189,7 @@ public:
 };
 
 void main01(ctpl::thread_pool& pool) {
-    Owned<UserService> usrv = UserService::New("userservice.api.com");
+    Owned<UserService> usrv = UserService::New(101);
     Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
     // std::barrier bar(2);
     std::atomic_int done_count;
@@ -212,6 +209,13 @@ void main01(ctpl::thread_pool& pool) {
 int main() {
     HazPtrInit();
     ctpl::thread_pool pool(2);
+    {
+        AutoTimer timer;
+        std::atomic_int tmp;
+        for (int i = 0; i < 1000000; ++i) {
+            tmp.fetch_add(1);
+        }
+    }
     {
         AutoTimer timer;
         for (int i = 0; i < 1000000; ++i) {
