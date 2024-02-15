@@ -9,7 +9,7 @@ private:
     T* ptr_;
 
 public:
-    TempPtr(Handle handle) : handle_(handle), ptr_(nullptr) {}
+    TempPtr(Handle handle) : handle_(handle), ptr_((T*)handle) {}
     // This type is neither moveable nor copyable
     TempPtr(TempPtr&& rhs) = delete;
     TempPtr(const TempPtr&) = delete;

@@ -4,6 +4,9 @@
 #include "../hatpop_01.h"
 
 class UserService {
+private:
+    std::string uname = "user001";
+
 public:
     static htp::Owned<UserService> New() {
         UserService *ptr = new UserService();
@@ -11,8 +14,8 @@ public:
                 htp::HandleStore::GetSingleton()->Create(ptr));
     }
 
-    std::string GetUserName() {
-        return "uname";
+    std::string GetUserName() const {
+        return uname;
     }
 };
 
