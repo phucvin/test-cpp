@@ -2,9 +2,26 @@
 
 namespace htp {
 
-void* HandleStore_GetSafe(Handle handle) {
-    return HandleStore::GetSingleton()->GetUnsafe(handle);
-}
+template<typename T>
+class TempPtr {
+private:
+    T* ptr_;
+
+public:
+    TempPtr(Handle handle) {
+        ptr_ = (T*)HandleStore::GetSingleton()->GetUnsafe(handle);
+    }
+
+    // This type is neither moveable nor copyable
+    TempPtr(TempPtr&& rhs) = delete;
+    TempPtr(const TempPtr&) = delete;
+    ~TempPtr() { Release(); }
+    T* operator *() const { return Get(); }
+    T* operator ->() const { return Get(); }
+
+    T* Get() const { return ptr_; }
+    void Release() { ptr_ = nullptr; }
+};
 
 template<typename T>
 class Owned {
