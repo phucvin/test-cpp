@@ -72,7 +72,8 @@ public:
     void Reset() {
         if (ptr_ == nullptr) return;
 
-        // TODO
+        HazPtrRetire(ptr_);
+        ptr_ = nullptr;
     }
 };
 
@@ -203,10 +204,10 @@ void main01() {
 }
 
 int main() {
-    HazPtrInit();
+    HazPtrInit(10000, 2);
     {
         AutoTimer timer;
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 10000; ++i) {
             // std::cout << std::endl;
             main01();
             // std::cout << std::endl;
