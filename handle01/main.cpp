@@ -5,6 +5,7 @@
 #include <thread>
 #include <vector>
 #include <cassert>
+#include <sys/resource.h>
 
 #include "slot_map.h"
 #include "haz_ptr.h"
@@ -216,11 +217,18 @@ int main() {
     ctpl::thread_pool pool(2);
     {
         AutoTimer timer;
-        for (int i = 0; i < 1000000; ++i) {
+        for (int i = 0; i < 10000; ++i) {
             // std::cout << std::endl;
             main01(pool);
             // std::cout << std::endl;
         }
+    }
+    {
+        struct rusage usage;
+        getrusage(RUSAGE_SELF, &usage);
+        long max_memory_usage = usage.ru_maxrss;
+        // Print the maximum memory usage.
+        std::cout << "Maximum memory usage: " << max_memory_usage << " bytes" << std::endl;
     }
     return 0;
 }
