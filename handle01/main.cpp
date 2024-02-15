@@ -2,7 +2,7 @@
 #include <barrier>
 #include <iostream>
 #include <string>
-#include <thread>
+#include <future>
 #include <vector>
 #include <cassert>
 
@@ -192,11 +192,13 @@ void main01() {
     Owned<UserService> usrv = UserService::New("userservice.api.com");
     Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
     std::barrier barrier(2);
-    std::jthread t1([&] {
+    std::async(std::launch::async, [&] {
+        std::cout << "async1" << std::endl;
         barrier.arrive_and_wait();
         upage->Render();
     });
-    std::jthread t2([&] {
+    std::async(std::launch::async, [&] {
+        std::cout << "async2" << std::endl;
         barrier.arrive_and_wait();
         usrv.Reset();
     });
@@ -206,7 +208,7 @@ int main() {
     HazPtrInit();
     {
         AutoTimer timer;
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 100; ++i) {
             // std::cout << std::endl;
             main01();
             // std::cout << std::endl;
