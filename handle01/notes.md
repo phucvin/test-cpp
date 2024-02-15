@@ -18,6 +18,7 @@ References:
 - https://github.com/dousbao/cxxhazard
 - https://github.com/pramalhe/ConcurrencyFreaks/blob/master/papers/hazarderas-2017.pdf
 - https://github.com/topics/hazard-pointer
+- https://github.com/huangjiahua/haz_ptr
 - https://github.com/topics/epoch-based-reclamation
 - https://github.com/rusnikola/lfsmr (Hyaline Reclamation), https://github.com/ibraheemdev/seize
 - https://concurrencyfreaks.blogspot.com/2017/08/why-is-memory-reclamation-so-important.html?m=1
