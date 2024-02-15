@@ -5,26 +5,23 @@
 
 class UserService {
 private:
-    std::string uname = "user001";
+    const std::string host_;
+    std::string uname_ = "user001";
 
 public:
-    static htp::Owned<UserService> New() {
-        UserService *ptr = new UserService();
-        return htp::Owned<UserService>(ptr,
-                htp::HandleStore::GetSingleton()->Create(ptr));
-    }
+    explicit UserService(const std::string& host) : host_(host) {}
 
     ~UserService() {
-        std::cout << "UserService:dtor" << std::endl;
+        std::cout << "UserService(host=" << host_ << ")::dtor" << std::endl;
     }
 
     std::string GetUserName() const {
-        return uname;
+        return uname_;
     }
 };
 
 int main() {
-    htp::Owned<UserService> usrv = UserService::New();
+    auto usrv = htp::make_owned<UserService>("user.api.com");
     std::cout << usrv.GetTempPtr()->GetUserName() << std::endl;
     return 0;
 }
