@@ -2,7 +2,7 @@
 
 #include <mutex>
 
-#include "third_party/slot_map.h"
+#include "../third_party/slot_map.h"
 
 namespace htp {
 
