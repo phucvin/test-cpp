@@ -4,19 +4,19 @@
 
 namespace {
 
-std::shared_mutex grm;
+std::shared_mutex gsm;
 
 void gsm_read_lock() {
-    grm.lock_shared();
+    gsm.lock_shared();
 }
 
 void gsm_read_unlock() {
-    grm.unlock_shared();
+    gsm.unlock_shared();
 }
 
 void gsm_sync() {
-    grm.lock();
-    grm.unlock();
+    gsm.lock();
+    gsm.unlock();
 }
 
 }  // namespace
