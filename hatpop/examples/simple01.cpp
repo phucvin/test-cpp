@@ -1,8 +1,14 @@
-#include "../pointer_handle.h"
-#include "../interfaces.h"
-#include "../pointer_handle_store.h"
+#include "../hatpop_pointer_pointer.h"
+
+class UserService {
+public:
+    htp::Owned<UserService> New() {
+        UserService *ptr = new UserService();
+        return htp::Owned<UserService>(ptr,
+                htp::IHandleStore::GetSingleton()->Create(ptr));
+    }
+};
 
 int main() {
-    htp::IHandleStore::GetSingleton();
     return 0;
 }

@@ -46,6 +46,7 @@ public:
 template<typename T>
 class IOwned {
 public:
+    IOwned() = default;
     // This type is moveable but not copyable
     IOwned(IOwned&& rhs) = default;
     IOwned(const IOwned&) = delete;
