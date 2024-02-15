@@ -1,6 +1,7 @@
 #pragma once
 
-#include <shared_mutex>
+#include <atomic>
+#include <memory>
 
 namespace htp {
 
@@ -8,20 +9,22 @@ template<typename T>
 class TempPtr {
 private:
     T* ptr_;
-    std::shared_mutex* mu_;
+    std::shared_ptr<std::atomic_int> arc_;
 
 public:
-    TempPtr(Handle handle, std::shared_mutex* mu) : ptr_(nullptr), mu_(mu) {
-        void* tmp1 = HandleStore::GetSingleton()->GetUnsafe(handle);
-        if (!tmp1) return;
-        // TODO: Make sure mu_ is not yet deleted here
-        mu_->lock_shared();
-        void* tmp2 = HandleStore::GetSingleton()->GetUnsafe(handle);
-        if (tmp2 != tmp1) {
-            mu_->unlock_shared();
+    TempPtr(Handle handle, std::shared_ptr<std::atomic_int> arc)
+            : ptr_(nullptr), arc_(std::move(arc)) {
+        if (arc_->fetch_add(1) <= 0) {
+            arc_->fetch_sub(1);
+            arc_.reset();
             return;
         }
-        ptr_ = (T*)tmp2;
+        ptr_ = (T*)HandleStore::GetSingleton()->GetUnsafe(handle);
+        if (ptr_ == nullptr) {
+            arc_->fetch_sub(1);
+            arc_.reset();
+            return;
+        }
     }
 
     // This type is neither moveable nor copyable
@@ -37,8 +40,11 @@ public:
     void Release() {
         if (ptr_ == nullptr) return;
 
-        mu_->unlock_shared();
-        ptr_ = nullptr;
+        if (arc_->fetch_sub(1) <= 1) {
+            auto tmp = ptr_;
+            ptr_ = nullptr;
+            delete tmp;
+        }
     }
 };
 
@@ -46,13 +52,14 @@ template<typename T>
 class Unowned {
 private:
     Handle handle_;
-    std::shared_mutex* mu_;
+    std::shared_ptr<std::atomic_int> arc_;
 
 public:
-    Unowned(Handle handle, std::shared_mutex* mu) : handle_(handle), mu_(mu) {}
+    Unowned(Handle handle, std::shared_ptr<std::atomic_int> arc)
+            : handle_(handle), arc_(std::move(arc)) {}
 
     TempPtr<T> GetTempPtr() const {
-        return TempPtr<T>(handle_, mu_);
+        return TempPtr<T>(handle_, arc_);
     }
 };
 
@@ -61,11 +68,12 @@ class Owned {
 private:
     T* ptr_;
     Handle handle_;
-    std::shared_mutex mu_;
+    std::shared_ptr<std::atomic_int> arc_;
 
 public:
-    Owned(T* ptr) : ptr_(ptr) {
+    Owned(T* ptr) : ptr_(ptr), arc_(std::make_shared<std::atomic_int>(1)) {
         if (ptr_) handle_ = HandleStore::GetSingleton()->Create(ptr_);
+        else arc_.reset();
     }
 
     // This type is moveable but not copyable
@@ -81,12 +89,12 @@ public:
         Release();
     }
 
-    Unowned<T> GetUnowned() {
-        return Unowned<T>(handle_, &mu_);
+    Unowned<T> GetUnowned() const {
+        return Unowned<T>(handle_, arc_);
     }
 
-    TempPtr<T> GetTempPtr() {
-        return TempPtr<T>(handle_, &mu_);
+    TempPtr<T> GetTempPtr() const {
+        return TempPtr<T>(handle_, arc_);
     }
 
     void Release() {
@@ -96,9 +104,7 @@ public:
         auto tmp = ptr_;
         ptr_ = nullptr;
         handle_ = {};
-        mu_.lock();
-        mu_.unlock();
-        delete tmp;
+        if (arc_->fetch_sub(1) <= 1) delete tmp;
     }
 };
 

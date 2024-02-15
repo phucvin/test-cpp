@@ -6,7 +6,7 @@
 #include <cassert>
 
 // #include "../hatpop_01.h"  // Will fail since there is no sync before deleting
-#include "../hatpop_06.h"  // Will success
+#include "../hatpop_07.h"  // Will success
 
 class Foo {
 private:
