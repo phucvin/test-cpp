@@ -9,7 +9,7 @@
 #include "slot_map.h"
 #include "haz_ptr.h"
 #include "auto_timer.h"
-#include "ThreadPool.h"
+#include "ThreadPool2.h"
 
 ENABLE_LOCAL_DOMAIN
 
@@ -190,28 +190,34 @@ public:
     }
 };
 
-void main01(ThreadPool& pool1, ThreadPool& pool2) {
+void main01(ctpl::thread_pool& pool1, ctpl::thread_pool& pool2) {
     // Owned<UserService> usrv = UserService::New("userservice.api.com");
     // Owned<UserPage> upage = UserPage::New(usrv.GetUnowned());
     std::barrier barrier1(2);
-    std::barrier barrier2(3);
-    pool1.enqueue([&] {
+    // std::barrier barrier2(2);
+    pool1.push([&](int) {
+        std::cout << "t1" << std::endl;
         barrier1.arrive_and_wait();
         // upage->Render();
-        barrier2.arrive_and_wait();
+        // barrier2.arrive_and_wait();
+        std::cout << "t1-" << std::endl;
     });
-    pool2.enqueue([&] {
+    pool2.push([&](int) {
+        std::cout << "t2" << std::endl;
         barrier1.arrive_and_wait();
         // usrv.Reset();
-        barrier2.arrive_and_wait();
+        // barrier2.arrive_and_wait();
+        std::cout << "t2-" << std::endl;
     });
-    barrier2.arrive_and_wait();
+    std::cout << "t0" << std::endl;
+    barrier1.wait();
+    std::cout << "t0-" << std::endl;
 }
 
 int main() {
     HazPtrInit();
-    ThreadPool pool1(1);
-    ThreadPool pool2(1);
+    ctpl::thread_pool pool1(1);
+    ctpl::thread_pool pool2(1);
     {
         AutoTimer timer;
         for (int i = 0; i < 100; ++i) {
