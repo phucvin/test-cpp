@@ -2,6 +2,13 @@
 
 namespace {
 
+/*
+NOTE: We can follow some simple implementation [1], but RCU will still have
+deadlock issue (i.e. cannot call Owned.Release while holding TempPtr)
+
+[1] https://concurrencyfreaks.blogspot.com/2016/09/a-simple-userspace-rcu-in-java.html
+*/
+
 void urcu_read_lock() {
 
 }
