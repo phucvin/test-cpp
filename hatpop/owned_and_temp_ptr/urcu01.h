@@ -1,5 +1,9 @@
 #pragma once
 
+#include <thread>
+#include <functional>
+#include <cstdlib>
+
 namespace {
 
 /*
@@ -9,16 +13,36 @@ deadlock issue (i.e. cannot call Owned.Release while holding TempPtr)
 [1] https://concurrencyfreaks.blogspot.com/2016/09/a-simple-userspace-rcu-in-java.html
 */
 
-void urcu_read_lock() {
+constexpr size_t MAX_THREAD_COUNT = 10;
+size_t _thread_read_times[MAX_THREAD_COUNT];  // Init values are 0s
+std::atomic_int _clock = 1;
 
+size_t tid() {
+    size_t i = std::hash<std::thread::id>{}(std::this_thread::get_id());
+    return i % MAX_THREAD_COUNT;
+}
+
+void urcu_read_lock() {
+    _thread_read_times[tid()] = _clock.load();
 }
 
 void urcu_read_unlock() {
-
+    _thread_read_times[tid()] = 0;
 }
 
 void urcu_sync() {
-
+    int now = _clock.fetch_add(1);
+    bool ok = false;
+    while (!ok) {
+        ok = true;
+        for (size_t i = 0; i < MAX_THREAD_COUNT; ++i) {
+            size_t t = _thread_read_times[i];
+            if (t > 0 && t < now) {
+                ok = false;
+                break;
+            }
+        }
+    }
 }
 
 }  // namespace

@@ -5,8 +5,9 @@
 #include <thread>
 #include <cassert>
 
-// #include "../hatpop01.h"  // Will fail since there is no sync before deleting
-#include "../hatpop07.h"  // Will success
+// #include "../hatpop01.h"  // Fail since there is no sync before deleting
+// #include "../hatpop07.h"  // OK
+#include "../hatpop04.h"  // WIP
 
 class Foo {
 private:
