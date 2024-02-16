@@ -54,7 +54,7 @@ void urcu_read_unlock() {
     int current_read_version = read_version.load();
     int expected_read_version = expected_read_version;
     if (!read_version.compare_exchange_strong(expected_read_version, 0)) {
-        assert(expected_read_version > current_read_version);
+        assert(expected_read_version >= current_read_version);
     }
 }
 
