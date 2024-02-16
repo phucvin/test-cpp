@@ -5,4 +5,4 @@
 #include "handle_store/slot_map.h"
 #include "common.h"
 // Hazzad Pointer
-#include "owned_and_temp_ptr/hazzard01.h"
+#include "owned_and_temp_ptr/hazard01.h"
