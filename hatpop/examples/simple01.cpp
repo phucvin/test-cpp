@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
 
-// #include "../hatpop_01.h" // OK, but not safe in races (see race01.cpp)
+#include "../hatpop_01.h" // Incorrect, rendering invalid user name
 // #include "../hatpop_06.h"  // Deadlock
-#include "../hatpop_07.h"  // OK
+// #include "../hatpop_07.h"  // OK
 
 class UserService;
 htp::Owned<UserService>* _global_usrv;
@@ -17,6 +17,7 @@ public:
     explicit UserService(const std::string& host) : host_(host) {}
 
     ~UserService() {
+        uname_ = "INVALID";
         std::cout << "UserService(host=" << host_ << ")::dtor" << std::endl;
     }
 
@@ -34,9 +35,10 @@ public:
 
     void Render() const {
         if (auto usrv = usrv_.GetTempPtr(); usrv) {
+            std::cout << "rendering user page..." << std::endl;
             // usrv is still safe and accessible even after releasing
             _global_usrv->Release();
-            std::cout << usrv->GetUserName() << std::endl;
+            std::cout << "  user name: " << usrv->GetUserName() << std::endl;
         } else {
             std::cout << "<skip rendering since user service is gone>"
                       << std::endl;
