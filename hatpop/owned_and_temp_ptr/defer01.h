@@ -12,26 +12,37 @@ std::atomic_int _current_read_count = 0;
 
 class DeferredList {
 private:
-    std::vector<void*> vec_;
+    std::vector<std::function<void()>> vec_;
 
 public:
-    ~DeferredList() { ReleaseAll(); }
+    ~DeferredList() {
+        while (_current_read_count.load() > 0) continue;
+        DeleteAll();
+    }
 
-    void ReleaseAll() {
-        //
+    void Push(std::function<void()> deleter) { vec_.push_back(deleter); }
+
+    void DeleteAll() {
+        for (auto& deleter: vec_) deleter();
+        vec_.clear();
     }
 };
 
-void defer_enter() {
+thread_local DeferredList _deferred_list;
 
+void defer_enter() {
+    _current_read_count.fetch_add(1);
 }
 
 void defer_exit() {
-
+    _current_read_count.fetch_sub(1);
 }
 
-void defer_retire(void* ptr) {
-
+void defer_delete(std::function<void()> deleter) {
+    _deferred_list.Push(std::move(deleter));
+    if (_current_read_count.load() == 0) {
+        _deferred_list.DeleteAll();
+    }
 }
 
 }  // namespace
@@ -69,7 +80,7 @@ public:
     void Release() {
         if (ptr_ == nullptr) return;
 
-        defer_retire(ptr_);
+        defer_exit();
         ptr_ = nullptr;
     }
 };
@@ -112,7 +123,7 @@ public:
         auto tmp = ptr_;
         ptr_ = nullptr;
         handle_ = {};
-        defer_retire(tmp);
+        defer_delete([tmp]() { delete tmp; });
     }
 };
 
