@@ -12,7 +12,10 @@
 // Releasing foo2...
 // Released foo2!
 // Done keeping foo1!
-#include "../hatpop06.h"  // Better
+// #include "../hatpop06.h"  // OK
+// #include "../hatpop07.h"  // OK
+// #include "../hatpop08.h"  // OK
+#include "../hatpop09.h"  // OK
 
 int main() {
     htp::Owned<int> owned_foo1 = htp::make_owned<int>(1);
