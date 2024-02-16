@@ -39,12 +39,11 @@ void urcu_read_unlock() {
     std::atomic_int& s_counter = _read_indicators[s][1];
     int current_s_counter = s_counter.fetch_sub(1);
     assert(current_s_counter >= 0);
-    if (current_s_counter == 1) {
-        int current_s_clock = s_clock.load();
-        int expected_s_clock = current_s_clock;
-        if (!s_clock.compare_exchange_strong(expected_s_clock, 0)) {
-            assert(expected_s_clock > current_s_clock);
-        }
+    if (current_s_counter > 1) return;
+    int current_s_clock = s_clock.load();
+    int expected_s_clock = current_s_clock;
+    if (!s_clock.compare_exchange_strong(expected_s_clock, 0)) {
+        assert(expected_s_clock > current_s_clock);
     }
 }
 
