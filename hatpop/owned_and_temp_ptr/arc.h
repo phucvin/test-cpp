@@ -15,8 +15,8 @@ private:
 public:
     TempPtr(Handle handle, std::shared_ptr<std::atomic_int> arc)
             : ptr_(nullptr), arc_(std::move(arc)) {
-        if (arc_->fetch_add(1) <= 0) {
-            assert(arc_->fetch_sub(1) == 0);
+        if (int prev = arc_->fetch_add(1); prev <= 0) {
+            assert(arc_->fetch_sub(1) == (prev+1));
             arc_.reset();
             return;
         }

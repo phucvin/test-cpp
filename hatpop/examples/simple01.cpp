@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
 
-#include "../hatpop_01.h" // Incorrect, rendering invalid user name
+// #include "../hatpop_01.h" // Incorrect, rendering invalid user name
 // #include "../hatpop_06.h"  // Deadlock
-// #include "../hatpop_07.h"  // OK
+#include "../hatpop_07.h"  // OK
 
 class UserService;
 htp::Owned<UserService>* _global_usrv;
@@ -51,6 +51,7 @@ int main() {
     _global_usrv = &usrv;
     auto upage = htp::make_owned<UserPage>(usrv);
     if (auto tmp = upage.GetTempPtr(); tmp) {
+        // usrv.Release();  // Enable this line to see skipped rendering
         tmp->Render();
     }
     return 0;
