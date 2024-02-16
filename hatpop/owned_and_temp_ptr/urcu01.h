@@ -28,7 +28,6 @@ void urcu_read_lock() {
     int s = slot();
     std::atomic_int& read_version = _read_indicators[s][0];
     std::atomic_int& read_counter = _read_indicators[s][1];
-    std::cout << "read_version: " << read_version << "\nread_counter: " << read_counter << std::endl;
 
     // Register new reader
     assert(read_counter.fetch_add(1) >= 0);
@@ -38,7 +37,6 @@ void urcu_read_lock() {
     // Keep the current read version if non-0
     if (!read_version.compare_exchange_strong(
             expected_read_version, writer_version)) {
-        std::cout << "expected_read_version: " << expected_read_version << "\nwriter_version: " << writer_version << std::endl;
         assert(expected_read_version <= writer_version);
     }
 }
@@ -47,7 +45,6 @@ void urcu_read_unlock() {
     int s = slot();
     std::atomic_int& read_version = _read_indicators[s][0];
     std::atomic_int& read_counter = _read_indicators[s][1];
-    std::cout << "read_version: " << read_version << "\nread_counter: " << read_counter << std::endl;
 
     // Unregister reader
     int current_read_counter = read_counter.fetch_sub(1);
@@ -57,7 +54,6 @@ void urcu_read_unlock() {
     int current_read_version = read_version.load();
     int expected_read_version = current_read_version;
     if (!read_version.compare_exchange_strong(expected_read_version, 0)) {
-        std::cout << "expected_read_version: " << expected_read_version << "\ncurrent_read_version: " << current_read_version<< std::endl;
         assert(expected_read_version > current_read_version);
     }
 }
