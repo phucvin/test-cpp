@@ -6,13 +6,13 @@
 // Releasing foo2...
 // Done keeping foo1!
 // Released foo2!
-// #include "../hatpop_05.h"  // Worse, releasing foo2 has to wait for foo1
+// #include "../hatpop05.h"  // Worse, releasing foo2 has to wait for foo1
 
 // Output would be:
 // Releasing foo2...
 // Released foo2!
 // Done keeping foo1!
-#include "../hatpop_06.h"  // Better
+#include "../hatpop06.h"  // Better
 
 int main() {
     htp::Owned<int> owned_foo1 = htp::make_owned<int>(1);
