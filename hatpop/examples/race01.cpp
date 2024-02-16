@@ -6,8 +6,8 @@
 #include <cassert>
 
 // #include "../hatpop01.h"  // Fail since there is no sync before deleting
-// #include "../hatpop07.h"  // OK
-// #include "../hatpop04.h"  // WIP
+// #include "../hatpop07.h"  // OK - TODO: Fix error
+// #include "../hatpop04.h"  // TODO: Fix error
 #include "../hatpop09.h"  // OK
 
 class Foo {
@@ -24,7 +24,7 @@ void race() {
     htp::Unowned<Foo> unowned_foo = owned_foo.GetUnowned();
     std::jthread t1([unowned_foo] {
         if (auto foo = unowned_foo.GetTempPtr(); foo) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            // std::this_thread::sleep_for(std::chrono::milliseconds(10));
             assert(foo->GetValue() == 101);
         }
     });
@@ -34,7 +34,7 @@ void race() {
 }
 
 int main() {
-    for (int i = 0; i < 1000; ++i) race();
+    for (int i = 0; i < 100000; ++i) race();
     std::cout << "Success!" << std::endl;
     return 0;
 }
