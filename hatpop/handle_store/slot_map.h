@@ -4,7 +4,7 @@
 
 #include "../third_party/slot_map.h"
 
-namespace htp {
+namespace hatp {
 
 typedef dod::slot_map_key64<void*> Handle;
 
@@ -43,4 +43,4 @@ HandleStore* HandleStore::GetSingleton() {
     return &global_handle_store;
 }
 
-}  // namespace htp
+}  // namespace hatp

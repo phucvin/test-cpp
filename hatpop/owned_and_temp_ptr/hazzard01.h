@@ -19,7 +19,7 @@ void hzd_retire(void* ptr) {
 
 }  // namespace
 
-namespace htp {
+namespace hatp {
 
 template<typename T>
 class TempPtr {
@@ -99,4 +99,4 @@ public:
     }
 };
 
-}  // namespace htp
+}  // namespace hatp

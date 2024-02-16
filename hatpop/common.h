@@ -1,6 +1,6 @@
 #pragma once
 
-namespace htp {
+namespace hatp {
 
 template<typename T>
 class TempPtr;
@@ -26,4 +26,4 @@ Owned<T> make_owned(Args&& ...args) {
     return Owned<T>(new T(std::forward<Args>(args)...));
 }
 
-}  // namespace htp
+}  // namespace hatp

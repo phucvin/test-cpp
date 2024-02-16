@@ -1,6 +1,6 @@
 #pragma once
 
-namespace htp {
+namespace hatp {
 
 typedef void* Handle;
 
@@ -29,4 +29,4 @@ HandleStore* HandleStore::GetSingleton() {
     return &global_handle_store;
 }
 
-}  // namespace htp
+}  // namespace hatp

@@ -4,7 +4,7 @@
 #include <mutex>
 #include <vector>
 
-namespace htp {
+namespace hatp {
 
 typedef size_t Handle;
 
@@ -45,4 +45,4 @@ HandleStore* HandleStore::GetSingleton() {
     return &global_handle_store;
 }
 
-}  // namespace htp
+}  // namespace hatp

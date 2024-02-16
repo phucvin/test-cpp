@@ -21,8 +21,8 @@ public:
 };
 
 void race() {
-    htp::Owned<Foo> owned_foo = htp::make_owned<Foo>(101);
-    htp::Unowned<Foo> unowned_foo = owned_foo.GetUnowned();
+    hatp::Owned<Foo> owned_foo = hatp::make_owned<Foo>(101);
+    hatp::Unowned<Foo> unowned_foo = owned_foo.GetUnowned();
     std::jthread t1([unowned_foo] {
         if (auto foo = unowned_foo.GetTempPtr(); foo) {
             // std::this_thread::sleep_for(std::chrono::milliseconds(10));

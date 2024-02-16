@@ -9,7 +9,7 @@
 #include "../hatpop09.h"  // OK
 
 class UserService;
-htp::Owned<UserService>* _global_usrv;
+hatp::Owned<UserService>* _global_usrv;
 
 class UserService {
 private:
@@ -31,10 +31,10 @@ public:
 
 class UserPage {
 private:
-    htp::Unowned<UserService> usrv_;
+    hatp::Unowned<UserService> usrv_;
 
 public:
-    explicit UserPage(htp::Unowned<UserService> usrv) : usrv_(usrv) {}
+    explicit UserPage(hatp::Unowned<UserService> usrv) : usrv_(usrv) {}
 
     void Render() const {
         if (auto usrv = usrv_.GetTempPtr(); usrv) {
@@ -50,9 +50,9 @@ public:
 };
 
 int main() {
-    auto usrv = htp::make_owned<UserService>("user.api.com");
+    auto usrv = hatp::make_owned<UserService>("user.api.com");
     _global_usrv = &usrv;
-    auto upage = htp::make_owned<UserPage>(usrv);
+    auto upage = hatp::make_owned<UserPage>(usrv);
     if (auto tmp = upage.GetTempPtr(); tmp) {
         // usrv.Release();  // Enable this line to see skipped rendering
         tmp->Render();

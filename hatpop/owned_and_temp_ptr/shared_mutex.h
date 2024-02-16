@@ -3,7 +3,7 @@
 #include <shared_mutex>
 #include <memory>
 
-namespace htp {
+namespace hatp {
 
 template<typename T>
 class TempPtr {
@@ -108,4 +108,4 @@ public:
     }
 };
 
-}  // namespace htp
+}  // namespace hatp

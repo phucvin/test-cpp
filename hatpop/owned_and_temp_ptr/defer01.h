@@ -47,7 +47,7 @@ void defer_delete(std::function<void()> deleter) {
 
 }  // namespace
 
-namespace htp {
+namespace hatp {
 
 template<typename T>
 class TempPtr {
@@ -127,4 +127,4 @@ public:
     }
 };
 
-}  // namespace htp
+}  // namespace hatp

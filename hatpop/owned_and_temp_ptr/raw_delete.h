@@ -1,6 +1,6 @@
 #pragma once
 
-namespace htp {
+namespace hatp {
 
 template<typename T>
 class TempPtr {
@@ -65,4 +65,4 @@ public:
     }
 };
 
-}  // namespace htp
+}  // namespace hatp
