@@ -22,7 +22,7 @@ public:
         }
         ptr_ = (T*)HandleStore::GetSingleton()->GetUnsafe(handle);
         if (ptr_ == nullptr) {
-            assert(arc_->fetch_sub(1) == 0);
+            assert(arc_->fetch_sub(1) == 1);
             arc_.reset();
             return;
         }

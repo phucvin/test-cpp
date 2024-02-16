@@ -6,9 +6,9 @@
 #include <cassert>
 
 // #include "../hatpop01.h"  // Fail since there is no sync before deleting
-// #include "../hatpop07.h"  // OK - TODO: Fix error
-// #include "../hatpop04.h"  // TODO: Fix error
-#include "../hatpop09.h"  // OK
+// #include "../hatpop04.h"  // Error when there are too many threads (duplicate thread id % MAX_THREAD_COUNT)
+#include "../hatpop07.h"  // OK
+// #include "../hatpop09.h"  // OK
 
 class Foo {
 private:
@@ -34,7 +34,7 @@ void race() {
 }
 
 int main() {
-    for (int i = 0; i < 100000; ++i) race();
+    for (int i = 0; i < 100'000; ++i) race();
     std::cout << "Success!" << std::endl;
     return 0;
 }
