@@ -28,6 +28,8 @@ void urcu_read_lock() {
 }
 
 void urcu_read_unlock() {
+    // TODO: Fix this by having another atomic int to count current readers
+    // using the same 'thread slot'
     _thread_read_times[tid()].store(0);
 }
 

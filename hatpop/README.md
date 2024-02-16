@@ -1,11 +1,15 @@
 # hatpop
 <b>H</b>andle <b>A</b>nd <b>T</b>emporary <b>P</b>ointer <b>O</b>ver (raw) <b>P</b>ointer
 
-See `examples` for more details.
+See `examples` (e.g. `examples\simple01.cpp`) for a quick look first.
 
 Notes:
 - Original prototype is in `../handle01`
-
+- `raw_pointer` is unsafe and can result in use-after-free or invalid-memory-access,
+unless the same pointer address is never reused for any new objects (i.e. after freeing,
+OS can reclaim/reuse the physical memory page contains the pointer address, but
+don't reuse that virtual memory page for future allocations)
+- `raw_pointer` and `arc` is probably safe, but need more evaluation and testing
 
 References:
 - https://floooh.github.io/2018/06/17/handles-vs-pointers.html

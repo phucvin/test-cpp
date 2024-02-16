@@ -53,6 +53,7 @@ template<typename T>
 class Unowned {
 private:
     Handle handle_;
+    // TODO: Use weak_ptr
     std::shared_ptr<std::atomic_int> arc_;
 
 public:
@@ -69,6 +70,8 @@ class Owned {
 private:
     T* ptr_;
     Handle handle_;
+    // TODO: Support multiple atomic ints to reduce high contention (i.e. when a
+    // lot of threads reading at the same time)
     std::shared_ptr<std::atomic_int> arc_;
 
 public:
