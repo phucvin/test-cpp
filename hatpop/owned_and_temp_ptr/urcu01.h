@@ -8,7 +8,7 @@
 
 namespace {
 
-constexpr int MAX_THREAD_COUNT = 10;
+constexpr int MAX_THREAD_COUNT = 128;
 std::atomic_int _thread_read_times[MAX_THREAD_COUNT];  // Init values are 0s
 std::atomic_int _clock = 1;
 
@@ -18,25 +18,24 @@ int tid() {
 }
 
 void urcu_read_lock() {
-    _thread_read_times[tid()].exchange(_clock.load());
+    int t1 = _clock.load();
+    _thread_read_times[tid()].store(t1);
+    // The following is probably needed per reference
+    /*
+    int t2 = _clock.load();
+    if (t2 != t1) _thread_read_times[tid()].store(t2);
+    */
 }
 
 void urcu_read_unlock() {
-    _thread_read_times[tid()].exchange(0);
+    _thread_read_times[tid()].store(0);
 }
 
 void urcu_sync() {
     int now = _clock.fetch_add(1);
-    bool ok = false;
-    while (!ok) {
-        ok = true;
-        for (int i = 0; i < MAX_THREAD_COUNT; ++i) {
-            int t = _thread_read_times[i];
-            if (t > 0 && t <= now) {
-                ok = false;
-                break;
-            }
-        }
+    for (int i = 0; i < MAX_THREAD_COUNT; ++i) {
+        for (int t = 1; t > 0 && t <= now; t = _thread_read_times[i].load())
+            continue;
     }
 }
 
@@ -115,10 +114,11 @@ public:
         if (ptr_ == nullptr) return;
         
         HandleStore::GetSingleton()->Erase(handle_);
-        urcu_sync();
-        delete ptr_;
+        auto tmp = ptr_;
         ptr_ = nullptr;
         handle_ = {};
+        urcu_sync();
+        delete tmp;
     }
 };
 

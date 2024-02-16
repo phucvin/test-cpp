@@ -7,6 +7,7 @@
 // #include "../hatpop07.h"  // OK
 // #include "../hatpop08.h"  // WIP, ~UserService is not called yet (i.e. leaking)
 #include "../hatpop09.h"  // OK
+// #include "../hatpop10.h"  // Deadlock
 
 class UserService;
 hatp::Owned<UserService>* _global_usrv;
