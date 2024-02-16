@@ -1,5 +1,7 @@
 // References:
-// - TODO: https://ticki.github.io/blog/fearless-concurrency-with-hazard-pointers/
+// - https://ticki.github.io/blog/fearless-concurrency-with-hazard-pointers/
+// - https://github.com/huangjiahua/haz_ptr
+// - https://github.com/bhhbazinga/HazardPointer
 
 #pragma once
 
