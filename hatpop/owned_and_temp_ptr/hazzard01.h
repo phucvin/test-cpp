@@ -1,5 +1,5 @@
 // References:
-// - TODO
+// - TODO: https://ticki.github.io/blog/fearless-concurrency-with-hazard-pointers/
 
 #pragma once
 
