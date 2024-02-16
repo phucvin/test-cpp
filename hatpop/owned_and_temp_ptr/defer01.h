@@ -16,6 +16,8 @@ private:
 
 public:
     ~DeferredList() {
+        if (vec_.empty()) return;
+
         while (_current_read_count.load() > 0) continue;
         DeleteAll();
     }
@@ -40,9 +42,7 @@ void defer_exit() {
 
 void defer_delete(std::function<void()> deleter) {
     _deferred_list.Push(std::move(deleter));
-    if (_current_read_count.load() == 0) {
-        _deferred_list.DeleteAll();
-    }
+    if (_current_read_count.load() == 0) _deferred_list.DeleteAll();
 }
 
 }  // namespace

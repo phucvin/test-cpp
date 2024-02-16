@@ -7,7 +7,8 @@
 
 // #include "../hatpop01.h"  // Fail since there is no sync before deleting
 // #include "../hatpop07.h"  // OK
-#include "../hatpop04.h"  // WIP
+// #include "../hatpop04.h"  // WIP
+#include "../hatpop09.h"  // OK
 
 class Foo {
 private:
@@ -33,7 +34,7 @@ void race() {
 }
 
 int main() {
-    for (int i = 0; i < 10; ++i) race();
+    for (int i = 0; i < 1000; ++i) race();
     std::cout << "Success!" << std::endl;
     return 0;
 }
