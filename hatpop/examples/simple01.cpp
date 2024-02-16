@@ -39,7 +39,7 @@ public:
 
 int main() {
     auto usrv = htp::make_owned<UserService>("user.api.com");
-    auto upage = htp::make_owned<UserPage>(usrv.GetUnowned());
+    auto upage = htp::make_owned<UserPage>(usrv);
     if (auto tmp = upage.GetTempPtr(); tmp) {
         tmp->Render();
     }
