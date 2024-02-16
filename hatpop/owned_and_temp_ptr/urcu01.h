@@ -12,8 +12,12 @@ namespace {
 #define HATPOP_URCU01_THREAD_SLOTS 4;
 #endif
 constexpr int _thread_slots = HATPOP_URCU01_THREAD_SLOTS;
-std::atomic_int _read_indicators[_thread_slots][2];  // Init values are 0s
-std::atomic_int _clock = 1;
+// Read indicators for each thread slot, first element is the read version (0
+// indicating no reading), second element is a counter indicating how many
+// readers/threads are using the same slot for reading
+// Init values are 0s
+std::atomic_int _read_indicators[_thread_slots][2];
+std::atomic_int _writer_version = 1;
 
 int slot() {
     unsigned int u = std::hash<std::thread::id>{}(std::this_thread::get_id());
@@ -22,36 +26,47 @@ int slot() {
 
 void urcu_read_lock() {
     int s = slot();
-    std::atomic_int& s_clock = _read_indicators[s][0];
-    std::atomic_int& s_counter = _read_indicators[s][1];
+    std::atomic_int& read_version = _read_indicators[s][0];
+    std::atomic_int& read_counter = _read_indicators[s][1];
+    std::cout << "read_version: " << read_version << "\nread_counter: " << read_counter << std::endl;
 
-    int now = _clock.load();
-    assert(s_counter.fetch_add(1) >= 0);
-    int expected_s_clock = 0;
-    if (!s_clock.compare_exchange_strong(expected_s_clock, now)) {
-        assert(expected_s_clock < now);
+    // Register new reader
+    assert(read_counter.fetch_add(1) >= 0);
+    int writer_version = _writer_version.load();
+    int expected_read_version = 0;
+    // Save writer version if the current read version is 0 (i.e. not reading)
+    // Keep the current read version if non-0
+    if (!read_version.compare_exchange_strong(
+            expected_read_version, writer_version)) {
+        std::cout << "expected_read_version: " << expected_read_version << "\nwriter_version: " << writer_version << std::endl;
+        assert(expected_read_version <= writer_version);
     }
 }
 
 void urcu_read_unlock() {
     int s = slot();
-    std::atomic_int& s_clock = _read_indicators[s][0];
-    std::atomic_int& s_counter = _read_indicators[s][1];
-    int current_s_counter = s_counter.fetch_sub(1);
-    assert(current_s_counter >= 0);
-    if (current_s_counter > 1) return;
-    int current_s_clock = s_clock.load();
-    int expected_s_clock = current_s_clock;
-    if (!s_clock.compare_exchange_strong(expected_s_clock, 0)) {
-        assert(expected_s_clock > current_s_clock);
+    std::atomic_int& read_version = _read_indicators[s][0];
+    std::atomic_int& read_counter = _read_indicators[s][1];
+    std::cout << "read_version: " << read_version << "\nread_counter: " << read_counter << std::endl;
+
+    // Unregister reader
+    int current_read_counter = read_counter.fetch_sub(1);
+    assert(current_read_counter >= 0);
+    if (current_read_counter > 1) return;
+    // If potentially last reader, set read version to 0 (not reading)
+    int current_read_version = read_version.load();
+    int expected_read_version = current_read_version;
+    if (!read_version.compare_exchange_strong(expected_read_version, 0)) {
+        std::cout << "expected_read_version: " << expected_read_version << "\ncurrent_read_version: " << current_read_version<< std::endl;
+        assert(expected_read_version > current_read_version);
     }
 }
 
 void urcu_sync() {
-    int now = _clock.fetch_add(1);
+    int writer_version = _writer_version.fetch_add(1);
     for (int s = 0; s < _thread_slots; ++s) {
-        std::atomic_int& s_clock = _read_indicators[s][0];
-        for (int t = 1; t > 0 && t <= now; t = s_clock.load())
+        std::atomic_int& read_version = _read_indicators[s][0];
+        for (int v = 1; v > 0 && v <= writer_version; v = read_version.load())
             continue;
     }
 }

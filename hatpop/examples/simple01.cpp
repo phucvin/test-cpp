@@ -2,9 +2,9 @@
 #include <string>
 
 // #include "../hatpop01.h" // OK only in this simple example, see deadlock01.cpp for when it's incorrect
-// #include "../hatpop04.h"  // OK
+#include "../hatpop04.h"  // OK
 // #include "../hatpop06.h"  // OK
-#include "../hatpop07.h"  // OK
+// #include "../hatpop07.h"  // OK
 // #include "../hatpop08.h"  // WIP, ~UserService is not called yet (i.e. leaking)
 // #include "../hatpop09.h"  // OK
 // #include "../hatpop10.h"  // WIP, ~UserService is not called yet (i.e. leaking)
