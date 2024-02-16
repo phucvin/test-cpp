@@ -1,12 +1,22 @@
 #include <iostream>
 #include <string>
 
-// #include "../hatpop01.h" // Incorrect, rendering invalid user name
-// #include "../hatpop04.h"  // Deadlock
-// #include "../hatpop06.h"  // Deadlock
-#include "../hatpop07.h"  // OK
+// Incorrect, rendering invalid user name
+// #include "../hatpop01.h"
+
+// Deadlock
+// NOTE: even though it's deadlock, it's very easy to detect and fix this kind
+// of deadlock, so it's might be OK to use these in practice due to their
+// potential performance advantages over other solutions
+#include "../hatpop04.h"
+// #include "../hatpop06.h"
+
+// OK
+// #include "../hatpop07.h"
 
 class UserService;
+// NOTE: This is a very bad practice, used here for demo purpose only
+// Don't keep pointer to Owned instances, use Unowned or SharedOwned instead
 hatp::Owned<UserService>* _global_usrv;
 
 class UserService {
@@ -37,6 +47,8 @@ public:
     void Render() const {
         if (auto usrv = usrv_.GetTempPtr(); usrv) {
             std::cout << "rendering user page..." << std::endl;
+            // NOTE: This is a very bad practice, used here for demo purpose only
+            // Don't release Owned instance while keeping any TempPtr
             // usrv is still safe and accessible even after releasing
             _global_usrv->Release();
             std::cout << "  user name: " << usrv->GetUserName() << std::endl;
