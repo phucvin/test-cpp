@@ -8,36 +8,16 @@
 
 namespace {
 
-constexpr int MAX_THREAD_COUNT = 10;
-std::atomic_int _thread_read_times[MAX_THREAD_COUNT];  // Init values are 0s
-std::atomic_int _clock = 1;
-
-int tid() {
-    int i = std::hash<std::thread::id>{}(std::this_thread::get_id());
-    return i % MAX_THREAD_COUNT;
-}
-
 void urcu_read_lock() {
-    _thread_read_times[tid()].exchange(_clock.load());
+    //
 }
 
 void urcu_read_unlock() {
-    _thread_read_times[tid()].exchange(0);
+    //
 }
 
 void urcu_sync() {
-    int now = _clock.fetch_add(1);
-    bool ok = false;
-    while (!ok) {
-        ok = true;
-        for (int i = 0; i < MAX_THREAD_COUNT; ++i) {
-            int t = _thread_read_times[i];
-            if (t > 0 && t <= now) {
-                ok = false;
-                break;
-            }
-        }
-    }
+    //
 }
 
 }  // namespace
@@ -115,10 +95,11 @@ public:
         if (ptr_ == nullptr) return;
         
         HandleStore::GetSingleton()->Erase(handle_);
-        urcu_sync();
-        delete ptr_;
+        auto tmp = ptr_;
         ptr_ = nullptr;
         handle_ = {};
+        urcu_sync();
+        delete tmp;
     }
 };
 
