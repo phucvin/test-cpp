@@ -1,3 +1,6 @@
+// References:
+// - https://github.com/pramalhe/ConcurrencyFreaks/blob/master/papers/gracesharingurcu-2017.pdf
+
 #pragma once
 
 #include <thread>
