@@ -7,9 +7,9 @@
 
 // #include "../hatpop01.h"  // Fail since there is no sync before deleting
 // #include "../hatpop04.h"  // OK
-// #include "../hatpop07.h"  // OK
+#include "../hatpop07.h"  // OK
 // #include "../hatpop09.h"  // OK
-#include "../hatpop10.h"  // WIP
+// #include "../hatpop10.h"  // WIP
 
 class Foo {
 private:

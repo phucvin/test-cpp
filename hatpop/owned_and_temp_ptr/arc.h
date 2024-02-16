@@ -13,8 +13,9 @@ private:
     std::shared_ptr<std::atomic_int> arc_;
 
 public:
-    TempPtr(Handle handle, std::shared_ptr<std::atomic_int> arc)
-            : ptr_(nullptr), arc_(std::move(arc)) {
+    TempPtr(Handle handle, std::weak_ptr<std::atomic_int> arc)
+            : ptr_(nullptr), arc_(arc.lock()) {
+        if (arc_ == nullptr) return;
         if (int prev = arc_->fetch_add(1); prev <= 0) {
             assert(arc_->fetch_sub(1) == (prev+1));
             arc_.reset();
@@ -45,6 +46,7 @@ public:
             auto tmp = ptr_;
             ptr_ = nullptr;
             delete tmp;
+            arc_.reset();
         }
     }
 };
@@ -53,11 +55,10 @@ template<typename T>
 class Unowned {
 private:
     Handle handle_;
-    // TODO: Use weak_ptr
-    std::shared_ptr<std::atomic_int> arc_;
+    std::weak_ptr<std::atomic_int> arc_;
 
 public:
-    Unowned(Handle handle, std::shared_ptr<std::atomic_int> arc)
+    Unowned(Handle handle, std::weak_ptr<std::atomic_int> arc)
             : handle_(handle), arc_(std::move(arc)) {}
 
     TempPtr<T> GetTempPtr() const {
@@ -108,6 +109,7 @@ public:
         ptr_ = nullptr;
         handle_ = {};
         if (arc_->fetch_sub(1) <= 1) delete tmp;
+        arc_.reset();
     }
 };
 
