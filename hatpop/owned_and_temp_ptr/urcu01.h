@@ -72,11 +72,10 @@ public:
         rhs.ptr_ = nullptr;
         rhs.handle_ = {};
     }
+    // Common methods & operators
     Owned(const Owned&) = delete;
-
-    ~Owned() {
-        Release();
-    }
+    ~Owned() { Release(); }
+    operator Unowned<T>() { return GetUnowned(); }
 
     Unowned<T> GetUnowned() const {
         return Unowned<T>(handle_);

@@ -82,17 +82,16 @@ public:
         rhs.ptr_ = nullptr;
         rhs.handle_ = {};
     }
+    // Common methods & operators
     Owned(const Owned&) = delete;
+    ~Owned() { Release(); }
+    operator Unowned<T>() { return GetUnowned(); }
 
-    ~Owned() {
-        Release();
-    }
-
-    Unowned<T> GetUnowned() {
+    Unowned<T> GetUnowned() const {
         return Unowned<T>(handle_, mu_);
     }
 
-    TempPtr<T> GetTempPtr() {
+    TempPtr<T> GetTempPtr() const {
         return TempPtr<T>(handle_, mu_);
     }
 

@@ -20,10 +20,28 @@ public:
     }
 };
 
+class UserPage {
+private:
+    htp::Unowned<UserService> usrv_;
+
+public:
+    explicit UserPage(htp::Unowned<UserService> usrv) : usrv_(usrv) {}
+
+    void Render() const {
+        if (auto usrv = usrv_.GetTempPtr(); usrv) {
+            std::cout << usrv->GetUserName() << std::endl;
+        } else {
+            std::cout << "<skip rendering since user service is gone>"
+                      << std::endl;
+        }
+    }
+};
+
 int main() {
-    auto owned_usrv = htp::make_owned<UserService>("user.api.com");
-    if (auto usrv = owned_usrv.GetTempPtr(); usrv) {
-        std::cout << usrv->GetUserName() << std::endl;
+    auto usrv = htp::make_owned<UserService>("user.api.com");
+    auto upage = htp::make_owned<UserPage>(usrv.GetUnowned());
+    if (auto tmp = upage.GetTempPtr(); tmp) {
+        tmp->Render();
     }
     return 0;
 }
