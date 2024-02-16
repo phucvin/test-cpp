@@ -13,8 +13,8 @@ std::atomic_int _thread_read_times[MAX_THREAD_COUNT];  // Init values are 0s
 std::atomic_int _clock = 1;
 
 int tid() {
-    int i = std::hash<std::thread::id>{}(std::this_thread::get_id());
-    return i % MAX_THREAD_COUNT;
+    unsigned int u = std::hash<std::thread::id>{}(std::this_thread::get_id());
+    return u % MAX_THREAD_COUNT;
 }
 
 void urcu_read_lock() {
