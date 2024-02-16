@@ -3,7 +3,8 @@
 
 // #include "../hatpop_01.h" // Incorrect, rendering invalid user name
 // #include "../hatpop_06.h"  // Deadlock
-#include "../hatpop_07.h"  // OK
+// #include "../hatpop_07.h"  // OK
+#include "../hatpop_08.h"  // WIP, ~UserService is not called yet (i.e. leaking)
 
 class UserService;
 htp::Owned<UserService>* _global_usrv;
