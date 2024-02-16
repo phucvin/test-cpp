@@ -34,7 +34,8 @@ void urcu_read_lock() {
     int writer_version = _writer_version.load();
     int expected_read_version = 0;
     // Save writer version if the current read version is 0 (i.e. not reading)
-    // Keep the current read version if non-0
+    // Keep the current read version if non-0, this happens when the current slot
+    // is being used for another read in the past
     if (!read_version.compare_exchange_strong(
             expected_read_version, writer_version)) {
         assert(expected_read_version <= writer_version);
@@ -53,6 +54,8 @@ void urcu_read_unlock() {
     // If potentially last reader, set read version to 0 (not reading)
     int current_read_version = read_version.load();
     int expected_read_version = current_read_version;
+    // It's OK to fail setting to 0, since another thread might start using this
+    // slot for new read (so it must be true that new read version > current read version)
     if (!read_version.compare_exchange_strong(expected_read_version, 0)) {
         assert(expected_read_version > current_read_version);
     }
