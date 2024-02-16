@@ -1,36 +1,29 @@
 // References:
+// - https://concurrencyfreaks.blogspot.com/2016/09/a-simple-userspace-rcu-in-java.html
 // - https://github.com/pramalhe/ConcurrencyFreaks/blob/master/papers/gracesharingurcu-2017.pdf
 
 #pragma once
 
 #include <thread>
 #include <functional>
-#include <cstdlib>
 
 namespace {
 
-/*
-NOTE: We can follow some simple implementation [1], but RCU will still have
-deadlock issue (i.e. cannot call Owned.Release while holding TempPtr)
-
-[1] https://concurrencyfreaks.blogspot.com/2016/09/a-simple-userspace-rcu-in-java.html
-*/
-
-constexpr size_t MAX_THREAD_COUNT = 10;
-size_t _thread_read_times[MAX_THREAD_COUNT];  // Init values are 0s
+constexpr int MAX_THREAD_COUNT = 10;
+std::atomic_int _thread_read_times[MAX_THREAD_COUNT];  // Init values are 0s
 std::atomic_int _clock = 1;
 
-size_t tid() {
-    size_t i = std::hash<std::thread::id>{}(std::this_thread::get_id());
+int tid() {
+    int i = std::hash<std::thread::id>{}(std::this_thread::get_id());
     return i % MAX_THREAD_COUNT;
 }
 
 void urcu_read_lock() {
-    _thread_read_times[tid()] = _clock.load();
+    _thread_read_times[tid()].exchange(_clock.load());
 }
 
 void urcu_read_unlock() {
-    _thread_read_times[tid()] = 0;
+    _thread_read_times[tid()].exchange(0);
 }
 
 void urcu_sync() {
@@ -38,9 +31,9 @@ void urcu_sync() {
     bool ok = false;
     while (!ok) {
         ok = true;
-        for (size_t i = 0; i < MAX_THREAD_COUNT; ++i) {
-            size_t t = _thread_read_times[i];
-            if (t > 0 && t < now) {
+        for (int i = 0; i < MAX_THREAD_COUNT; ++i) {
+            int t = _thread_read_times[i];
+            if (t > 0 && t <= now) {
                 ok = false;
                 break;
             }
