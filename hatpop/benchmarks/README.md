@@ -2,7 +2,7 @@
 $ sh <(curl -L https://nixos.org/nix/install) --no-daemon
 $ . /home/codespace/.nix-profile/etc/profile.d/nix.sh
 $ nix-shell -p clang
-$ TODO
+$ clang++ -pthread -std=c++20 -o time01 time01.cpp && ./time01
 ```
 
 TODO:
