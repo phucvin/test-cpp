@@ -1,5 +1,5 @@
 // References:
-// - https://concurrencyfreaks.blogspot.com/2016/09/a-simple-userspace-rcu-in-java.html
+// - https://github.com/pramalhe/ConcurrencyFreaks/blob/master/papers/gracesharingurcu-2017.pdf
 
 #pragma once
 
