@@ -5,9 +5,6 @@
 // #include "../hatpop04.h"  // Deadlock
 // #include "../hatpop06.h"  // Deadlock
 #include "../hatpop07.h"  // OK
-// #include "../hatpop08.h"  // WIP, ~UserService is not called yet (i.e. leaking)
-// #include "../hatpop09.h"  // OK
-// #include "../hatpop10.h"  // Deadlock
 
 class UserService;
 hatp::Owned<UserService>* _global_usrv;
@@ -55,7 +52,6 @@ int main() {
     _global_usrv = &usrv;
     auto upage = hatp::make_owned<UserPage>(usrv);
     if (auto tmp = upage.GetTempPtr(); tmp) {
-        // usrv.Release();  // Enable this line to see skipped rendering
         tmp->Render();
     }
     return 0;
