@@ -533,7 +533,7 @@ template <typename T, typename TKeyType = slot_map_key64<T>, size_t PAGESIZE = 4
             return nullptr;
         }
         SLOT_MAP_ASSERT(m.version != key::kInvalidVersion);
-        // TODO: Re-enable this
+        // TODO(@phucvin): Re-enable this
         // SLOT_MAP_ASSERT(m.tombstone == 0);
         SLOT_MAP_ASSERT(m.inactive == 0);
 
