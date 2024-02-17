@@ -17,13 +17,13 @@ public:
             : ptr_(nullptr), arc_(arc.lock()) {
         if (arc_ == nullptr) return;
         if (int prev = arc_->fetch_add(1); prev <= 0) {
-            assert(arc_->fetch_sub(1) == (prev+1));
+            assert(arc_->fetch_sub(1) > 0);
             arc_.reset();
             return;
         }
         ptr_ = (T*)HandleStore::GetSingleton()->GetUnsafe(handle);
         if (ptr_ == nullptr) {
-            assert(arc_->fetch_sub(1) >= 1);
+            assert(arc_->fetch_sub(1) > 0);
             arc_.reset();
             return;
         }
