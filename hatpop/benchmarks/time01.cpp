@@ -46,6 +46,18 @@ UBENCH_EX(Time01, GetAndReleaseTempPtr1M_NoHatpop) {
     }
 }
 
+UBENCH_EX(Time01, GetTempPtr1Access1M) {
+    auto x = hatp::make_owned<int>(1);
+    auto tp = x.GetTempPtr();
+
+    UBENCH_DO_BENCHMARK() {
+        for (int i = 0; i < 1'000'000; ++i) {
+            assert(tp);
+            assert(*tp == 1);
+        }
+    }
+}
+
 UBENCH_EX(Time01, ReleaseOwned) {
     auto x = hatp::make_owned<int>(1);
 
