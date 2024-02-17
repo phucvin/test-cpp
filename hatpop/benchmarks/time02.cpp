@@ -1,4 +1,5 @@
 #include <atomic>
+#include <barrier>
 #include <iostream>
 #include <cassert>
 
@@ -52,6 +53,25 @@ UBENCH(Time02, Read100) {
 
     for (int i = 0; i < _max_threads; ++i) {
         _thread_pool.push([&](int) {
+            auto x = unowned_x.GetTempPtr();
+            assert(x);
+            assert(*x == 1);
+            done_count.fetch_add(1);
+        });
+    }
+
+    while (done_count.load() < _max_threads) continue;
+}
+
+UBENCH(Time02, Read100WithBarrier) {
+    auto owned_x = hatp::make_owned<int>(1);
+    auto unowned_x = owned_x.GetUnowned();
+    std::barrier bar(_max_threads);
+    std::atomic_int done_count;
+
+    for (int i = 0; i < _max_threads; ++i) {
+        _thread_pool.push([&](int) {
+            bar.arrive_and_wait();
             auto x = unowned_x.GetTempPtr();
             assert(x);
             assert(*x == 1);
