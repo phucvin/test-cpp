@@ -8,7 +8,7 @@
 // #include "../hatpop01.h"  // Error
 // #include "../hatpop04.h"
 // #include "../hatpop05.h"
-#include "../hatpop07.h"  // TODO: Fix error that sometime happen
+#include "../hatpop07.h"
 
 #include "../third_party/ubench.h"
 
