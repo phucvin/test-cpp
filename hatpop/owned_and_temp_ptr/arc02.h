@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <cassert>
 
@@ -10,8 +11,42 @@ namespace {
 // - https://github.com/EricLBuehler/trc
 // - https://stackoverflow.com/questions/70601992/c-thread-local-counter-implement
 // - https://github.com/fereidani/rclite
-class Trc {
+class TrcInternal {
+public:
+    std::atomic_int arc_;
+    thread_local int trc_;
 
+    TrcInternal() : arc_(1) {
+        assert(Inc());
+    }
+
+    // Returns false if already 0
+    bool Inc() {
+        if (arc_.load() == 0) return false;
+        if (trc_ == 0) assert(arc_.fetch_add(1) > 0);
+        ++trc_;
+        return true;
+    }
+
+    // Returns true if 0 after decrement
+    bool Dec() {
+        assert(--trc_ >= 0);
+        if (trc_ > 0) return false;
+        return arc_.fetch_sub(1) == 1;
+    }
+};
+
+class WeakTrc {
+public:
+    std::weak_ptr<TrcInternal> _internal;
+    WeakTrc(const std::shared_ptr<TrcInternal>& from) : _internal(from) {}
+};
+class Trc {
+public:
+    std::shared_ptr<TrcInternal> _internal;
+    Trc() : _internal(std::make_shared<TrcInternal>()) {}
+    Trc(const WeakTrc& from) : _internal(from._internal.lock()) {}
+    WeakTrc ToWeak() { return WeakTrc(_internal); }
 };
 
 }
@@ -26,8 +61,8 @@ private:
 
 public:
     TempPtr(Handle handle, WeakTrc trc)
-            : ptr_(nullptr), trc_(trc.Upgrade()) {
-        if (trc_ == nullptr) return;
+            : ptr_(nullptr), trc_(trc) {
+        if (trc_.IsEmpty()) return;
         if (int prev = trc_->fetch_add(1); prev <= 0) {
             assert(trc_->fetch_sub(1) > 0);
             trc_.reset();
