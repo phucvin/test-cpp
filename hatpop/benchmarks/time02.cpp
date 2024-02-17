@@ -9,6 +9,7 @@
 // #include "../hatpop04.h"
 // #include "../hatpop05.h"
 // #include "../hatpop07.h"
+// #include "../hatpop09.h"
 #include "../hatpop11.h"
 
 #include "../third_party/ubench.h"

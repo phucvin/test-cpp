@@ -11,42 +11,38 @@ namespace {
 // - https://github.com/EricLBuehler/trc
 // - https://stackoverflow.com/questions/70601992/c-thread-local-counter-implement
 // - https://github.com/fereidani/rclite
-class TrcInternal {
+struct TrcInternal {
+    std::atomic_int arc = 1;
+    /*thread_local*/ int trc;
+};
+class WeakTrc {
 public:
-    std::atomic_int arc_;
-    thread_local int trc_;
-
-    TrcInternal() : arc_(1) {
-        assert(Inc());
-    }
+    std::weak_ptr<TrcInternal> internal_;
+    WeakTrc(const std::shared_ptr<TrcInternal>& from) : internal_(from) {}
+};
+class Trc {
+public:
+    std::shared_ptr<TrcInternal> internal_;
+    Trc() : internal_(std::make_shared<TrcInternal>()) { assert(Inc()); }
+    Trc(const WeakTrc& from) : internal_(from.internal_.lock()) {}
+    WeakTrc ToWeak() const { return WeakTrc(internal_); }
+    bool IsZero() { return internal_ && internal_->arc.load() == 0; }
+    void Reset() { internal_.reset(); }
 
     // Returns false if already 0
     bool Inc() {
-        if (arc_.load() == 0) return false;
-        if (trc_ == 0) assert(arc_.fetch_add(1) > 0);
-        ++trc_;
+        if (internal_->arc.load() == 0) return false;
+        if (internal_->trc == 0) assert(internal_->arc.fetch_add(1) > 0);
+        ++internal_->trc;
         return true;
     }
 
     // Returns true if 0 after decrement
     bool Dec() {
-        assert(--trc_ >= 0);
-        if (trc_ > 0) return false;
-        return arc_.fetch_sub(1) == 1;
+        assert(--internal_->trc >= 0);
+        if (internal_->trc > 0) return false;
+        return internal_->arc.fetch_sub(1) == 1;
     }
-};
-
-class WeakTrc {
-public:
-    std::weak_ptr<TrcInternal> _internal;
-    WeakTrc(const std::shared_ptr<TrcInternal>& from) : _internal(from) {}
-};
-class Trc {
-public:
-    std::shared_ptr<TrcInternal> _internal;
-    Trc() : _internal(std::make_shared<TrcInternal>()) {}
-    Trc(const WeakTrc& from) : _internal(from._internal.lock()) {}
-    WeakTrc ToWeak() { return WeakTrc(_internal); }
 };
 
 }
@@ -62,16 +58,15 @@ private:
 public:
     TempPtr(Handle handle, WeakTrc trc)
             : ptr_(nullptr), trc_(trc) {
-        if (trc_.IsEmpty()) return;
-        if (int prev = trc_->fetch_add(1); prev <= 0) {
-            assert(trc_->fetch_sub(1) > 0);
-            trc_.reset();
+        if (trc_.IsZero()) return;
+        if (!trc_.Inc()) {
+            trc_.Reset();
             return;
         }
         ptr_ = (T*)HandleStore::GetSingleton()->GetUnsafe(handle);
         if (ptr_ == nullptr) {
-            assert(trc_->fetch_sub(1) > 0);
-            trc_.reset();
+            trc_.Dec();
+            trc_.Reset();
             return;
         }
     }
@@ -89,11 +84,11 @@ public:
     void Release() {
         if (ptr_ == nullptr) return;
 
-        if (trc_->fetch_sub(1) <= 1) {
+        if (trc_.Dec()) {
             auto tmp = ptr_;
             ptr_ = nullptr;
             delete tmp;
-            trc_.reset();
+            trc_.Reset();
         }
     }
 };
@@ -121,9 +116,9 @@ private:
     Trc trc_;
 
 public:
-    Owned(T* ptr) : ptr_(ptr), trc_(1) {
+    Owned(T* ptr) : ptr_(ptr) {
         if (ptr_) handle_ = HandleStore::GetSingleton()->Create(ptr_);
-        else trc_.reset();
+        else trc_.Reset();
     }
 
     // This type is moveable but not copyable
@@ -143,7 +138,7 @@ public:
     }
 
     TempPtr<T> GetTempPtr() const {
-        return TempPtr<T>(handle_, trc_);
+        return TempPtr<T>(handle_, trc_.ToWeak());
     }
 
     void Release() {
@@ -153,8 +148,8 @@ public:
         auto tmp = ptr_;
         ptr_ = nullptr;
         handle_ = {};
-        if (trc_->fetch_sub(1) <= 1) delete tmp;
-        trc_.reset();
+        if (trc_.Dec()) delete tmp;
+        trc_.Reset();
     }
 };
 
