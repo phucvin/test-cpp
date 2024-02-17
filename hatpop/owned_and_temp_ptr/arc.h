@@ -78,6 +78,8 @@ private:
     Handle handle_;
     // TODO: Support multiple atomic ints to reduce high contention (i.e. when a
     // lot of threads reading at the same time)
+    // References:
+    // - https://github.com/EricLBuehler/trc (Thread Reference Counted)
     std::shared_ptr<std::atomic_int> arc_;
 
 public:
