@@ -8,6 +8,8 @@ namespace {
 // An attempt to achive thread-local/faster ref counting while being thread-safe
 // References:
 // - https://github.com/EricLBuehler/trc
+// - https://stackoverflow.com/questions/70601992/c-thread-local-counter-implement
+// - https://github.com/fereidani/rclite
 class Trc {
 
 };
