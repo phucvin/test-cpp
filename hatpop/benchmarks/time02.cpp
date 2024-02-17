@@ -111,10 +111,6 @@ UBENCH(Time02, Read100Release1) {
     std::atomic_int success_reads = 0;
     static std::atomic_int _printed = 0;
 
-    launch_async(futures, [&] {
-        bar.arrive_and_wait();
-        owned_x.Release();
-    });
     for (int i = 0; i < 99; ++i) {
         launch_async(futures, [&] {
             bar.arrive_and_wait();
@@ -126,6 +122,10 @@ UBENCH(Time02, Read100Release1) {
             }
         });
     }
+    launch_async(futures, [&] {
+        bar.arrive_and_wait();
+        owned_x.Release();
+    });
 
     wait_all(futures);
     if (_printed.fetch_add(1) < 3) {
