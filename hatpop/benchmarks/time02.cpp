@@ -1,6 +1,8 @@
 #include <atomic>
 #include <barrier>
+#include <future>
 #include <iostream>
+#include <vector>
 #include <cassert>
 
 // #include "../hatpop01.h"  // Error
@@ -8,121 +10,122 @@
 // #include "../hatpop05.h"
 #include "../hatpop07.h"  // TODO: Fix error that sometime happen
 
-#include "../third_party/thread_pool.h"
 #include "../third_party/ubench.h"
 
-constexpr int _max_threads = 101;
-ctpl::thread_pool _thread_pool(_max_threads + 2);
+std::vector<std::future<void>> make_futures() {
+    return {};
+}
+
+void launch_async(std::vector<std::future<void>> &futures, std::function<void()> task) {
+    futures.push_back(std::async(std::launch::async, task));
+}
+
+void wait_all(std::vector<std::future<void>> &futures) {
+    for (const auto& f : futures) f.wait();
+}
 
 UBENCH(Time02, WarmUp) {
-    std::atomic_int done_count;
-    for (int i = 0; i < _max_threads; ++i) {
-        _thread_pool.push([&](int) {
-            done_count.fetch_add(1);
-        });
+    auto futures = make_futures();
+
+    for (int i = 0; i < 100; ++i) {
+        launch_async(futures, [] { return; });
     }
-    while (done_count.load() < _max_threads) continue;
+
+    wait_all(futures);
 }
 
 UBENCH(Time02, Read1Release1) {
     auto owned_x = hatp::make_owned<int>(1);
     auto unowned_x = owned_x.GetUnowned();
-    std::atomic_int done_count;
+    auto futures = make_futures();
     static std::atomic_int _printed_err = 0;
 
-    _thread_pool.push([&](int) {
+    launch_async(futures, [&] {
         if (auto x = unowned_x.GetTempPtr()) {
             if (*x != 1 && _printed_err.fetch_add(1) == 0) {
                 std::cerr << "ERROR: *x != 1" << std::endl;
             }
         }
-        done_count.fetch_add(1);
     });
-    _thread_pool.push([&](int) {
+    launch_async(futures, [&] {
         owned_x.Release();
-        done_count.fetch_add(1);
     });
 
-    while (done_count.load() < 2) continue;
-}
-
-UBENCH(Time02, Read100) {
-    auto owned_x = hatp::make_owned<int>(1);
-    auto unowned_x = owned_x.GetUnowned();
-    std::atomic_int done_count;
-
-    for (int i = 0; i < _max_threads; ++i) {
-        _thread_pool.push([&](int) {
-            auto x = unowned_x.GetTempPtr();
-            assert(x);
-            assert(*x == 1);
-            done_count.fetch_add(1);
-        });
-    }
-
-    while (done_count.load() < _max_threads) continue;
+    wait_all(futures);
 }
 
 UBENCH(Time02, Read100_NoHatpop) {
     int x = 1;
     int* px = &x;
-    std::atomic_int done_count;
+    auto futures = make_futures();
 
-    for (int i = 0; i < _max_threads; ++i) {
-        _thread_pool.push([&](int) {
+    for (int i = 0; i < 100; ++i) {
+        launch_async(futures, [&] {
             assert(px != nullptr);
             assert(*px == 1);
-            done_count.fetch_add(1);
         });
     }
 
-    while (done_count.load() < _max_threads) continue;
+    wait_all(futures);
+}
+
+UBENCH(Time02, Read100) {
+    auto owned_x = hatp::make_owned<int>(1);
+    auto unowned_x = owned_x.GetUnowned();
+    auto futures = make_futures();
+
+    for (int i = 0; i < 100; ++i) {
+        launch_async(futures, [&] {
+            auto x = unowned_x.GetTempPtr();
+            assert(x);
+            assert(*x == 1);
+        });
+    }
+
+    wait_all(futures);
 }
 
 UBENCH(Time02, Read100WithBarrier) {
     auto owned_x = hatp::make_owned<int>(1);
     auto unowned_x = owned_x.GetUnowned();
-    std::barrier bar(_max_threads);
-    std::atomic_int done_count;
+    auto futures = make_futures();
+    std::barrier bar(100);
 
-    for (int i = 0; i < _max_threads; ++i) {
-        _thread_pool.push([&](int) {
+    for (int i = 0; i < 100; ++i) {
+        launch_async(futures, [&] {
             bar.arrive_and_wait();
             auto x = unowned_x.GetTempPtr();
             assert(x);
             assert(*x == 1);
-            done_count.fetch_add(1);
         });
     }
 
-    while (done_count.load() < _max_threads) continue;
+    wait_all(futures);
 }
 
 UBENCH(Time02, Read100Release1) {
     auto owned_x = hatp::make_owned<int>(1);
     auto unowned_x = owned_x.GetUnowned();
-    std::atomic_int done_count;
+    auto futures = make_futures();
     static std::atomic_int _printed_err = 0;
 
-    for (int i = 0; i < _max_threads; ++i) {
-        if (i == _max_threads / 2) {
-            _thread_pool.push([&](int) {
+    for (int i = 0; i < 100; ++i) {
+        if (i == 100 / 2) {
+            launch_async(futures, [&] {
                 owned_x.Release();
-                done_count.fetch_add(1);
             });
         } else {
-            _thread_pool.push([&](int) {
+            launch_async(futures, [&] {
                 if (auto x = unowned_x.GetTempPtr()) {
                     if (*x != 1 && _printed_err.fetch_add(1) == 0) {
                         std::cerr << "ERROR: *x != 1" << std::endl;
                     }
                 }
-                done_count.fetch_add(1);
             });
         }
     }
 
-    while (done_count.load() < _max_threads) continue;
+    wait_all(futures);
 }
 
 UBENCH_MAIN();

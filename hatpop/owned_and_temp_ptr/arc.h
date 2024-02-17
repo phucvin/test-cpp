@@ -23,6 +23,7 @@ public:
         }
         ptr_ = (T*)HandleStore::GetSingleton()->GetUnsafe(handle);
         if (ptr_ == nullptr) {
+            // TODO: Check & fix if this assertion is not correct
             assert(arc_->fetch_sub(1) == 1);
             arc_.reset();
             return;
