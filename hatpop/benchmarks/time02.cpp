@@ -38,11 +38,11 @@ UBENCH(Time02, Read1Release1) {
     auto owned_x = hatp::make_owned<int>(1);
     auto unowned_x = owned_x.GetUnowned();
     auto futures = make_futures();
-    static std::atomic_int _printed_err = 0;
+    static std::atomic_int _printed = 0;
 
     launch_async(futures, [&] {
         if (auto x = unowned_x.GetTempPtr()) {
-            if (*x != 1 && _printed_err.fetch_add(1) == 0) {
+            if (*x != 1 && _printed.fetch_add(1) == 0) {
                 std::cerr << "ERROR: *x != 1" << std::endl;
             }
         }
@@ -107,25 +107,30 @@ UBENCH(Time02, Read100Release1) {
     auto owned_x = hatp::make_owned<int>(1);
     auto unowned_x = owned_x.GetUnowned();
     auto futures = make_futures();
-    static std::atomic_int _printed_err = 0;
+    std::barrier bar(100);
+    std::atomic_int success_reads = 0;
+    static std::atomic_int _printed = 0;
 
-    for (int i = 0; i < 100; ++i) {
-        if (i == 100 / 2) {
-            launch_async(futures, [&] {
-                owned_x.Release();
-            });
-        } else {
-            launch_async(futures, [&] {
-                if (auto x = unowned_x.GetTempPtr()) {
-                    if (*x != 1 && _printed_err.fetch_add(1) == 0) {
-                        std::cerr << "ERROR: *x != 1" << std::endl;
-                    }
+    launch_async(futures, [&] {
+        bar.arrive_and_wait();
+        owned_x.Release();
+    });
+    for (int i = 0; i < 99; ++i) {
+        launch_async(futures, [&] {
+            bar.arrive_and_wait();
+            if (auto x = unowned_x.GetTempPtr()) {
+                success_reads.fetch_add(*x == 1 ? 1 : 0);
+                if (*x != 1 && _printed.fetch_add(1) == 0) {
+                    std::cerr << "ERROR: *x != 1" << std::endl;
                 }
-            });
-        }
+            }
+        });
     }
 
     wait_all(futures);
+    if (_printed.fetch_add(1) < 3) {
+        std::cout << "success_reads=" << success_reads << std::endl;
+    }
 }
 
 UBENCH_MAIN();
