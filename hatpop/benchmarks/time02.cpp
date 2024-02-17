@@ -103,15 +103,15 @@ UBENCH(Time02, Read100WithBarrier) {
     wait_all(futures);
 }
 
-UBENCH(Time02, Read100Release1) {
+void Time02_ReadNRelease1(int n) {
     auto owned_x = hatp::make_owned<int>(1);
     auto unowned_x = owned_x.GetUnowned();
     auto futures = make_futures();
-    std::barrier bar(100);
+    std::barrier bar(n);
     std::atomic_int success_reads = 0;
     static std::atomic_int _printed = 0;
 
-    for (int i = 0; i < 99; ++i) {
+    for (int i = 0; i < n-1; ++i) {
         launch_async(futures, [&] {
             bar.arrive_and_wait();
             if (auto x = unowned_x.GetTempPtr()) {
@@ -131,6 +131,14 @@ UBENCH(Time02, Read100Release1) {
     if (_printed.fetch_add(1) < 3) {
         std::cout << "success_reads=" << success_reads << std::endl;
     }
+}
+
+UBENCH(Time02, Read1000Release1) {
+    Time02_ReadNRelease1(1000);
+}
+
+UBENCH(Time02, Read100Release1) {
+    Time02_ReadNRelease1(100);
 }
 
 UBENCH_MAIN();
