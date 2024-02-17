@@ -4,7 +4,7 @@
 #include "handle_store/raw_pointer.h"
 #include "common_no_unowned.h"
 // Atomic Reference Counter 
-#include "owned_and_temp_ptr/arc02.h"
+#include "owned_and_temp_ptr/arc01.h"
 // NOTE: Others don't work with raw_pointer, i.e. will get use-after-free errors,
 // since they need to call HandleStore::GetUnsafe before doing further bookeeping
 // ARC works in *most cases* (not yet tested for all possible cases) because it
