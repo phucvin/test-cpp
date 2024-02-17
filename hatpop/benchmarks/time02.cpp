@@ -1,8 +1,9 @@
 #include <atomic>
+#include <cassert>
 
-#include "../hatpop01.h"
+// #include "../hatpop01.h"  // Error
 // #include "../hatpop04.h"
-// #include "../hatpop07.h"
+#include "../hatpop07.h"
 
 #include "../third_party/thread_pool.h"
 #include "../third_party/ubench.h"
