@@ -1,3 +1,5 @@
+#include <cassert>
+
 // #include "../hatpop01.h"
 // #include "../hatpop04.h"
 #include "../hatpop07.h"
@@ -21,7 +23,17 @@ UBENCH_EX(Time01, GetAndReleaseTempPtr) {
 
     UBENCH_DO_BENCHMARK() {
         auto temp_ptr = x.GetTempPtr();
+        assert(*temp_ptr == 1);
         // temp_ptr.Release() is called when it goes out of scope
+    }
+}
+
+UBENCH_EX(Time01, GetAndReleaseTempPtr_NoHatpop) {
+    int x = 1;
+    int* px = &x;
+
+    UBENCH_DO_BENCHMARK() {
+        assert(*px == 1);
     }
 }
 
