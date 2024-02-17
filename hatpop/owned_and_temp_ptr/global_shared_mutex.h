@@ -45,7 +45,7 @@ public:
     TempPtr(TempPtr&& rhs) = delete;
     TempPtr(const TempPtr&) = delete;
     ~TempPtr() { Release(); }
-    T* operator *() const { return Get(); }
+    T operator *() const { return *Get(); }
     T* operator ->() const { return Get(); }
     operator bool() const { return Get() != nullptr; }
 
