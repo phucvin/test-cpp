@@ -2,10 +2,10 @@
 #include <iostream>
 #include <cassert>
 
-#include "../hatpop01.h"  // Error
+// #include "../hatpop01.h"  // Error
 // #include "../hatpop04.h"
 // #include "../hatpop05.h"
-// #include "../hatpop07.h"
+#include "../hatpop07.h"
 
 #include "../third_party/thread_pool.h"
 #include "../third_party/ubench.h"
@@ -57,6 +57,33 @@ UBENCH(Time02, Read100) {
             assert(*x == 1);
             done_count.fetch_add(1);
         });
+    }
+
+    while (done_count.load() < _max_threads) continue;
+}
+
+UBENCH(Time02, Read100Release1) {
+    auto owned_x = hatp::make_owned<int>(1);
+    auto unowned_x = owned_x.GetUnowned();
+    std::atomic_int done_count;
+    static std::atomic_int _printed_err = 0;
+
+    for (int i = 0; i < _max_threads; ++i) {
+        if (i == _max_threads / 2) {
+            _thread_pool.push([&](int) {
+                owned_x.Release();
+                done_count.fetch_add(1);
+            });
+        } else {
+            _thread_pool.push([&](int) {
+                if (auto x = unowned_x.GetTempPtr()) {
+                    if (*x != 1 && _printed_err.fetch_add(1) == 0) {
+                        std::cerr << "ERROR: *x != 1" << std::endl;
+                    }
+                }
+                done_count.fetch_add(1);
+            });
+        }
     }
 
     while (done_count.load() < _max_threads) continue;
