@@ -6,7 +6,7 @@
 // #include "../hatpop01.h"  // Error
 // #include "../hatpop04.h"
 // #include "../hatpop05.h"
-#include "../hatpop07.h"
+#include "../hatpop07.h"  // TODO: Fix error that sometime happen
 
 #include "../third_party/thread_pool.h"
 #include "../third_party/ubench.h"
@@ -56,6 +56,22 @@ UBENCH(Time02, Read100) {
             auto x = unowned_x.GetTempPtr();
             assert(x);
             assert(*x == 1);
+            done_count.fetch_add(1);
+        });
+    }
+
+    while (done_count.load() < _max_threads) continue;
+}
+
+UBENCH(Time02, Read100_NoHatpop) {
+    int x = 1;
+    int* px = &x;
+    std::atomic_int done_count;
+
+    for (int i = 0; i < _max_threads; ++i) {
+        _thread_pool.push([&](int) {
+            assert(px != nullptr);
+            assert(*px == 1);
             done_count.fetch_add(1);
         });
     }
