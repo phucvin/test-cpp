@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <atomic>
 #include <memory>
 #include <cassert>
@@ -13,6 +14,7 @@ private:
     std::shared_ptr<std::atomic_int> arc_;
 
 public:
+    TempPtr() {}
     TempPtr(Handle handle, std::weak_ptr<std::atomic_int> arc)
             : ptr_(nullptr), arc_(arc.lock()) {
         if (arc_ == nullptr) return;
@@ -35,7 +37,19 @@ public:
     }
 
     // This type is neither moveable nor copyable
-    TempPtr(TempPtr&& rhs) = delete;
+    TempPtr(TempPtr&& rhs) {
+        this->ptr_ = rhs.ptr_;
+        this->arc_ = std::move(rhs.arc_);
+        rhs.ptr_ = nullptr;
+        rhs.arc_.reset();
+    }
+    TempPtr& operator=(TempPtr&& rhs) {
+        this->ptr_ = rhs.ptr_;
+        this->arc_ = std::move(rhs.arc_);
+        rhs.ptr_ = nullptr;
+        rhs.arc_.reset();
+        return *this;
+    }
     TempPtr(const TempPtr&) = delete;
     ~TempPtr() { Release(); }
     T operator *() const { return *Get(); }
@@ -107,6 +121,7 @@ public:
     void Release() {
         if (ptr_ == nullptr) return;
         
+        std::cout << "Owned releasing, arc_=" << arc_->load() << std::endl;
         HandleStore::GetSingleton()->Erase(handle_);
         auto tmp = ptr_;
         ptr_ = nullptr;

@@ -1,4 +1,3 @@
-// TODO: expire after x accesses finish
 // TODO: nested accesses don't increase total access count
 // TODO: duration-based expiration, expire safely async
 
@@ -8,8 +7,8 @@ template<typename T>
 class CachedTempPtrBase {
 public:
     // This type is neither moveable nor copyable
-    CachedTempPtrBase(CachedTempPtrBase&&) = delete;
-    CachedTempPtrBase(const CachedTempPtrBase&) = delete;
+    // CachedTempPtrBase(CachedTempPtrBase&&) = delete;
+    // CachedTempPtrBase(const CachedTempPtrBase&) = delete;
 
     T operator *() const { return *Get(); }
     T* operator ->() const { return Get(); }
@@ -28,14 +27,14 @@ private:
     T* ptr_;
 
 public:
-    CachedTempPtr(CachedUnowned<T>& parent, T* ptr_)
+    CachedTempPtr(CachedUnowned<T>& parent, T* ptr)
             : parent_(parent), ptr_(ptr) {}
 
     ~CachedTempPtr() {
-        parent_.Dec();
+        parent_.DecAccessCount();
     }
 
-    virtual T* Get() { return ptr_; }
+    virtual T* Get() const { return ptr_; }
 };
 
 template<typename T>
@@ -47,20 +46,21 @@ private:
     int current_access_count_;
 
 public:
-    CachedUnowned(Unowned unowned, int access_count)
-            : unowned_(unowned), access_count_(access_count) {}
+    CachedUnowned(Unowned<T> unowned, int access_count)
+            : unowned_(unowned), access_count_(access_count),
+              current_access_count_(access_count) {}
 
     CachedTempPtr<T> GetTempPtr() {
-        if (current_access_count_ == 0) {
-            current_tp_.SetUnsafe(unowned_.GetTempPtr());
+        if (current_access_count_ == access_count_ && access_count_ > 0) {
+            current_tp_ = unowned_.GetTempPtr();
         }
-        return CachedTempPtr<T>(*this, current_tp_.GetRawPointerUnsafe());
+        return CachedTempPtr<T>(*this, current_tp_.Get());
     }
 
-    void Dec() {
-        if (++current_access_count_ >= access_count_) {
-            current_access_count_ = 0;
-            current_tp_.Reset();
+    void DecAccessCount() {
+        if (--current_access_count_ <= 0) {
+            current_access_count_ = access_count_;
+            current_tp_.Release();
         }
     }
 };
