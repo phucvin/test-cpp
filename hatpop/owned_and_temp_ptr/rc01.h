@@ -39,13 +39,11 @@ public:
     void Release() {
         if (ptr_ == nullptr) return;
 
-        if (--*rc_ == 0) {
-            auto tmp = ptr_;
-            ptr_ = nullptr;
-            delete tmp;
-            delete rc_;
-            rc_ = nullptr;
-        }
+        auto tmp = ptr_;
+        ptr_ = nullptr;
+        delete tmp;
+        if (--*rc_ == 0) delete rc_;
+        rc_ = nullptr;
     }
 };
 

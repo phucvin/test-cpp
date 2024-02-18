@@ -105,8 +105,8 @@ public:
     void Release() {
         if (ptr_ == nullptr) return;
 
-        urcu_read_unlock();
         ptr_ = nullptr;
+        urcu_read_unlock();
     }
 };
 

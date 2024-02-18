@@ -84,12 +84,10 @@ public:
     void Release() {
         if (ptr_ == nullptr) return;
 
-        if (trc_.Dec()) {
-            auto tmp = ptr_;
-            ptr_ = nullptr;
-            delete tmp;
-            trc_.Reset();
-        }
+        auto tmp = ptr_;
+        ptr_ = nullptr;
+        if (trc_.Dec()) delete tmp;
+        trc_.Reset();
     }
 };
 

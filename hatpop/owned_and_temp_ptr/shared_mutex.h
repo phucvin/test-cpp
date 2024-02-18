@@ -42,8 +42,8 @@ public:
     void Release() {
         if (ptr_ == nullptr) return;
 
-        mu_->unlock_shared();
         ptr_ = nullptr;
+        mu_->unlock_shared();
     }
 };
 

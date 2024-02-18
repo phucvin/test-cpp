@@ -54,8 +54,9 @@ public:
     void Release() {
         if (ptr_ == nullptr) return;
 
-        hzd_unpin(ptr_);
+        auto tmp = ptr_;
         ptr_ = nullptr;
+        hzd_unpin(tmp);
     }
 };
 

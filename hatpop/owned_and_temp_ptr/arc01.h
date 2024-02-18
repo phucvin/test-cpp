@@ -70,9 +70,7 @@ public:
 
         auto tmp = ptr_;
         ptr_ = nullptr;
-        if (arc_->fetch_sub(1) <= 1) {
-            delete tmp;
-        }
+        if (arc_->fetch_sub(1) <= 1) delete tmp;
         arc_.reset();
     }
 };

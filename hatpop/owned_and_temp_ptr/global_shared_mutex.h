@@ -54,8 +54,8 @@ public:
     void Release() {
         if (ptr_ == nullptr) return;
 
-        gsm_read_unlock();
         ptr_ = nullptr;
+        gsm_read_unlock();
     }
 };
 
