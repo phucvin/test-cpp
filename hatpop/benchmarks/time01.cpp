@@ -60,12 +60,12 @@ UBENCH_EX(Time01, GetTempPtr1Access1M) {
     }
 }
 
-UBENCH_EX(Time01, GetAndReleaseCachedTempPtr1M) {
+UBENCH_EX(Time01, GetAndRelease100CachedTempPtr1M) {
     auto x = hatp::make_owned<int>(1);
     hatp::CachedUnowned<int> cached_unowned_x(x, 100);
 
     UBENCH_DO_BENCHMARK() {
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 1'000'000; ++i) {
             auto tp = cached_unowned_x.GetTempPtr();
             assert(tp);
             assert(*tp == 1);
