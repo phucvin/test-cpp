@@ -7,10 +7,33 @@
 namespace hatp {
 
 template<typename T>
+class CachedTempPtr;
+template<typename T>
+class CachedUnowned;
+
+template<typename T>
 class TempPtr {
 private:
     T* ptr_;
     std::shared_ptr<std::atomic_int> arc_;
+
+    // This type is moveable for friends but not copyable for friends/public
+    friend class CachedTempPtr<T>;
+    friend class CachedUnowned<T>;
+    TempPtr(TempPtr&& rhs) {
+        this->ptr_ = rhs.ptr_;
+        this->arc_ = std::move(rhs.arc_);
+        rhs.ptr_ = nullptr;
+        rhs.arc_.reset();
+    }
+    TempPtr& operator=(TempPtr&& rhs) {
+        this->ptr_ = rhs.ptr_;
+        this->arc_ = std::move(rhs.arc_);
+        rhs.ptr_ = nullptr;
+        rhs.arc_.reset();
+        return *this;
+    }
+    TempPtr(const TempPtr&) = delete;
 
 public:
     TempPtr() {}
@@ -35,21 +58,6 @@ public:
         }
     }
 
-    // This type is neither moveable nor copyable
-    TempPtr(TempPtr&& rhs) {
-        this->ptr_ = rhs.ptr_;
-        this->arc_ = std::move(rhs.arc_);
-        rhs.ptr_ = nullptr;
-        rhs.arc_.reset();
-    }
-    TempPtr& operator=(TempPtr&& rhs) {
-        this->ptr_ = rhs.ptr_;
-        this->arc_ = std::move(rhs.arc_);
-        rhs.ptr_ = nullptr;
-        rhs.arc_.reset();
-        return *this;
-    }
-    TempPtr(const TempPtr&) = delete;
     ~TempPtr() { Release(); }
     T operator *() const { return *Get(); }
     T* operator ->() const { return Get(); }

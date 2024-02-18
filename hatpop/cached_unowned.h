@@ -29,11 +29,7 @@ private:
 public:
     CachedTempPtr(CachedUnowned<T>& parent, T* ptr)
             : parent_(parent), ptr_(ptr) {}
-
-    ~CachedTempPtr() {
-        parent_.DecAccessCount();
-    }
-
+    ~CachedTempPtr() { parent_.DecAccessCount(); }
     virtual T* Get() const { return ptr_; }
 };
 
@@ -45,6 +41,14 @@ private:
     int access_count_;
     int current_access_count_;
 
+    friend class CachedTempPtr<T>;
+    void DecAccessCount() {
+        if (--current_access_count_ <= 0) {
+            current_access_count_ = access_count_;
+            current_tp_.Release();
+        }
+    }
+
 public:
     CachedUnowned(Unowned<T> unowned, int access_count)
             : unowned_(unowned), access_count_(access_count),
@@ -55,13 +59,6 @@ public:
             current_tp_ = unowned_.GetTempPtr();
         }
         return CachedTempPtr<T>(*this, current_tp_.Get());
-    }
-
-    void DecAccessCount() {
-        if (--current_access_count_ <= 0) {
-            current_access_count_ = access_count_;
-            current_tp_.Release();
-        }
     }
 };
 
