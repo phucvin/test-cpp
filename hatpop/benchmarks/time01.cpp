@@ -7,8 +7,6 @@
 #include "../hatpop11.h"
 // #include "../hatpop12.h"
 
-#include "../cached_unowned.h"
-
 #include "../third_party/ubench.h"
 
 UBENCH(Time01, make_owned) {
@@ -54,19 +52,6 @@ UBENCH_EX(Time01, GetTempPtr1Access1M) {
 
     UBENCH_DO_BENCHMARK() {
         for (int i = 0; i < 1'000'000; ++i) {
-            assert(tp);
-            assert(*tp == 1);
-        }
-    }
-}
-
-UBENCH_EX(Time01, GetAndRelease100CachedTempPtr1M) {
-    auto x = hatp::make_owned<int>(1);
-    hatp::CachedUnowned<int> cached_unowned_x(x, 100);
-
-    UBENCH_DO_BENCHMARK() {
-        for (int i = 0; i < 1'000'000; ++i) {
-            auto tp = cached_unowned_x.GetTempPtr();
             assert(tp);
             assert(*tp == 1);
         }
