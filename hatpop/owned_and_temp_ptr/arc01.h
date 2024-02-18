@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <atomic>
 #include <memory>
 #include <cassert>
@@ -17,7 +16,6 @@ public:
     TempPtr() {}
     TempPtr(Handle handle, std::weak_ptr<std::atomic_int> arc)
             : ptr_(nullptr), arc_(arc.lock()) {
-        std::cout << "TempPtr arc_=" << arc_->load() << std::endl;
         if (arc_ == nullptr) return;
         // The following commented code is optional when weak_ptr is used
         /*
@@ -45,12 +43,10 @@ public:
         rhs.arc_.reset();
     }
     TempPtr& operator=(TempPtr&& rhs) {
-        std::cout << "TempPtr rhs.arc_=" << rhs.arc_->load() << std::endl;
         this->ptr_ = rhs.ptr_;
         this->arc_ = std::move(rhs.arc_);
         rhs.ptr_ = nullptr;
         rhs.arc_.reset();
-        std::cout << "TempPtr arc_=" << arc_->load() << std::endl;
         return *this;
     }
     TempPtr(const TempPtr&) = delete;
@@ -64,7 +60,6 @@ public:
     void Release() {
         if (ptr_ == nullptr) return;
 
-        std::cout << "TempPtr releasing arc_=" << arc_->load() << std::endl;
         auto tmp = ptr_;
         ptr_ = nullptr;
         if (arc_->fetch_sub(1) <= 1) {
@@ -125,7 +120,6 @@ public:
     void Release() {
         if (ptr_ == nullptr) return;
         
-        std::cout << "Owned releasing, arc_=" << arc_->load() << std::endl;
         HandleStore::GetSingleton()->Erase(handle_);
         auto tmp = ptr_;
         ptr_ = nullptr;
