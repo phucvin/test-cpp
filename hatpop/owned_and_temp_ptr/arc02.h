@@ -13,6 +13,7 @@ namespace {
 // - https://github.com/fereidani/rclite
 // - https://github.com/facebook/folly/blob/main/folly/docs/ThreadLocal.md
 // - https://stackoverflow.com/questions/36301420/is-it-possible-to-implement-boostthread-specific-ptr-via-thread-local
+// - https://github.com/ANSANJAY/KernelPerCPUVariable
 struct TrcInternal {
     std::atomic_int arc = 1;
     /*thread_local*/ int trc;
