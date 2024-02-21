@@ -1,6 +1,7 @@
 #include <cassert>
 
 #include "../hatpop11.h"
+#include "../hatpop09.h"  // TODO
 #include "../cached_unowned.h"
 
 #include "../third_party/ubench.h"
