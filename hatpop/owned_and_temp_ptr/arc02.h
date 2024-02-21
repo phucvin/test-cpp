@@ -6,6 +6,8 @@
 
 namespace {
 
+thread_local std::map<void*, int> _trc_by_strong_arc;
+
 // An attempt to achive thread-local/faster ref counting while being thread-safe
 // References:
 // - https://github.com/EricLBuehler/trc
@@ -14,23 +16,53 @@ namespace {
 // - https://github.com/facebook/folly/blob/main/folly/docs/ThreadLocal.md
 // - https://stackoverflow.com/questions/36301420/is-it-possible-to-implement-boostthread-specific-ptr-via-thread-local
 // - https://github.com/ANSANJAY/KernelPerCPUVariable
-struct TrcInternal {
-    std::atomic_int arc = 1;
-    /*thread_local*/ int trc;
-};
 class WeakTrc {
 public:
-    std::weak_ptr<TrcInternal> internal_;
-    WeakTrc(const std::shared_ptr<TrcInternal>& from) : internal_(from) {}
+    std::atomic_int* arc_;
+    WeakTrc(std::atomic_int* arc) : arc_(arc) {
+        if (arc_ == nullptr) return;
+        arc_[1].fetch_add(1);
+    }
+    ~WeakTrc() {
+        if (arc_ == nullptr) return;
+        if (arc_[1].fetch_sub(1) == 1 && arc_[0].load() == 0) {
+            delete[] arc_;
+        }
+        arc_ = nullptr;
+    }
 };
 class Trc {
 public:
-    std::shared_ptr<TrcInternal> internal_;
-    Trc() : internal_(std::make_shared<TrcInternal>()) { assert(Inc()); }
-    Trc(const WeakTrc& from) : internal_(from.internal_.lock()) {}
-    WeakTrc ToWeak() const { return WeakTrc(internal_); }
-    bool IsZero() { return internal_ && internal_->arc.load() == 0; }
-    void Reset() { internal_.reset(); }
+    std::atomic_int* arc_;
+
+    Trc() : arc_(new std::atomic_int[2]{1, 0}) {}
+    Trc(const WeakTrc& from) {
+        arc_ = from.arc_;
+        if (arc_ == nullptr) return;
+        if (arc_[0].fetch_add(1) == 0) {
+            arc_[0].fetch_sub(1);
+            arc_ = nullptr;
+        }
+    }
+
+    ~Trc() {
+        if (arc_ == nullptr) return;
+        if (arc_[0].fetch_sub(1) == 1) {
+            
+            delete[] arc_;
+        }
+        arc_ = nullptr;
+    }
+
+    void Reset() {
+        arc_ = nullptr;
+    }
+
+    bool IsZero() { return arc_ == nullptr; }
+
+    WeakTrc ToWeak() const {
+        return WeakTrc(arc_);
+    }
 
     // Returns false if already 0
     bool Inc() {
