@@ -5,4 +5,4 @@
 #include "handle_store/slot_map01.h"
 #include "common.h"
 // Defer deletion to the next retire when no threads are reading
-#include "owned_and_temp_ptr/defer01.h"
+#include "owned_and_temp_ptr/defer02.h"

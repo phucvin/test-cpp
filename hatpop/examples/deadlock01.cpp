@@ -8,11 +8,12 @@
 // NOTE: even though it's deadlock, it's very easy to detect and fix this kind
 // of deadlock, so it's might be OK to use these in practice due to their
 // potential performance advantages over other solutions
-#include "../hatpop04.h"
+// #include "../hatpop04.h"
 // #include "../hatpop06.h"
 
 // OK
 // #include "../hatpop07.h"
+#include "../hatpop09.h"
 
 class UserService;
 // NOTE: This is a very bad practice, used here for demo purpose only
