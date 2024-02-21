@@ -11,6 +11,7 @@ namespace {
 // - https://github.com/EricLBuehler/trc
 // - https://stackoverflow.com/questions/70601992/c-thread-local-counter-implement
 // - https://github.com/fereidani/rclite
+// - https://github.com/facebook/folly/blob/main/folly/docs/ThreadLocal.md
 // - https://stackoverflow.com/questions/36301420/is-it-possible-to-implement-boostthread-specific-ptr-via-thread-local
 struct TrcInternal {
     std::atomic_int arc = 1;
