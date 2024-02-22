@@ -2,6 +2,7 @@
 // References:
 // - https://concurrencyfreaks.blogspot.com/2013/12/left-right-classical-algorithm.html?m=1
 // - https://concurrencyfreaks.blogspot.com/2019/11/is-left-right-generic-concurrency.html?m=1
+// - https://github.com/mmcshane/leftright
 
 #pragma once
 
