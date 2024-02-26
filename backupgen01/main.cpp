@@ -15,6 +15,7 @@ public:
     uint8_t GetGen() { return gen_; }
     bool Get(T** pptr) const {
         uint8_t ho_gen = *gen_ptr_;
+        std::cout << "gen_=" << (int)gen_ << ", ho_gen=" << (int)ho_gen << std::endl;
         if (ho_gen != gen_) return false;
         *pptr = ptr_;
         return true;
@@ -72,11 +73,13 @@ public:
 
 int main() {
     auto* usrv = new HandledObject<UserService>("user.api.com");
-    auto upage = new HandledObject<UserPage>(usrv->GetHandle());
+    auto* upage = new HandledObject<UserPage>(usrv->GetHandle());
+    delete usrv;
     if (UserPage* tmp; upage->GetHandle().Get(&tmp)) {
+        std::cout << "begin" << std::endl;
         tmp->Render();
     }
-    delete usrv;
     delete upage;
+    std::cout << "end" << std::endl;
     return 0;
 }
