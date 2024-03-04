@@ -25,6 +25,7 @@ public:
     void Notify() {
         std::for_each(to_notify_.begin(), to_notify_.end(),
                 [](auto h) { (*h)(); });
+        to_notify_.clear();
     }
 
 public:
@@ -61,15 +62,24 @@ public:
         value_ = std::move(newValue);
         SetNotify();
     }
+
+    const T& Get() const {
+        return value_;
+    }
 };
 
 int main() {
     Subject<int> i1(1);
-    ReactorHandle rh1 = ReactorStore::GetSingleton().Create([]() {
-        std::cout << "react" << std::endl;
+    Subject<int> i2(2);
+    ReactorHandle rh1 = ReactorStore::GetSingleton().Create([&]() {
+        std::cout << "react | i1=" << i1.Get() << ", i2=" << i2.Get() << std::endl;
     });
     i1.AddReactor(rh1);
+    i2.AddReactor(rh1);
     i1.Set(2);
+    i2.Set(3);
+    ReactorStore::GetSingleton().Notify();
+    i2.Set(4);
     ReactorStore::GetSingleton().Notify();
 
     return 0;
